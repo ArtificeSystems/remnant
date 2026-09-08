@@ -1,6 +1,6 @@
 {
   "name": "@artifice/remnant",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Remnant Protocol: durable, accountable agent work state.",
   "type": "module",
   "license": "Apache-2.0",
@@ -44,7 +44,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "tsx --test test/core.test.ts test/node.test.ts test/conformance.test.ts test/resolve.test.ts test/interop.test.ts",
+    "test": "tsx --test test/core.test.ts test/node.test.ts test/conformance.test.ts test/resolve.test.ts test/interop.test.ts test/gap-close.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

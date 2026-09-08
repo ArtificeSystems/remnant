@@ -40,6 +40,32 @@ export {
   supersede,
 } from './helpers.js';
 export { resolveCurrent, type RemnantConflict, type RemnantResolution, type ConflictReason } from './resolve.js';
+export {
+  createCurrentStore,
+  CurrentStoreError,
+  FileCurrentStore,
+  InMemoryCurrentStore,
+  type CurrentStore,
+  type FileCurrentStoreOptions,
+} from './store.js';
+export { isSafeToAct, type SafeToActOptions, type SafeToActResult } from './safe.js';
+export {
+  effectUsedAsProof,
+  isProofEligible,
+  isProofEvidence,
+  isProofVerification,
+  proofDiagnostics,
+  resolveCurrentProof,
+} from './proof.js';
+export {
+  engStatusToRemnant,
+  produceEngStatus,
+  serializeEngStatusCard,
+  writeEngStatusCard,
+  writeEngStatusFile,
+  type EngStatusCard,
+  type WriteEngStatusInput,
+} from './producer/eng-status.js';
 export { renderRemnantForAgent, type RenderRemnantOptions, type OutputRenderMode } from './render.js';
 export { auditRemnant, type AuditOptions, type RemnantAudit } from './audit.js';
 export { redactRemnant } from './redact.js';
