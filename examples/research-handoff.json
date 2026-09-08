@@ -1,0 +1,30 @@
+{
+  "protocolVersion": "0.1",
+  "id": "art_research_004",
+  "createdAt": "2026-09-08T15:00:00.000Z",
+  "asOf": "2026-09-08T14:45:00.000Z",
+  "producer": "research.agent",
+  "goal": "Determine the currently documented A2A Remnant shape.",
+  "status": "current",
+  "outputs": [
+    {
+      "kind": "data",
+      "data": {
+        "summary": "A2A has a Remnant task-output concept containing one or more Parts."
+      }
+    }
+  ],
+  "assumptions": [],
+  "unknowns": [],
+  "verification": [
+    {
+      "claim": "The statement reflects the official specification retrieved during this run",
+      "method": "Fetched official A2A specification",
+      "result": "pass",
+      "evidence": ["source:a2a-official-spec"],
+      "asOf": "2026-09-08T14:45:00.000Z"
+    }
+  ],
+  "stop": [],
+  "nextAction": null
+}

@@ -1,0 +1,33 @@
+{
+  "protocolVersion": "0.1",
+  "id": "art_code_001",
+  "createdAt": "2026-09-08T15:00:00.000Z",
+  "asOf": "2026-09-08T15:00:00.000Z",
+  "producer": "cursor.engineer",
+  "goal": "Add proprAccountId routing without changing existing Hyperliquid behavior.",
+  "status": "partial",
+  "outputs": [
+    {
+      "kind": "file",
+      "path": "/repo/src/routes/ultra-fast-trade.ts",
+      "mediaType": "text/typescript"
+    }
+  ],
+  "assumptions": [],
+  "unknowns": [
+    "POST /api/ultra-fast-trade integration test has not been rerun"
+  ],
+  "verification": [
+    {
+      "claim": "TypeScript compiles",
+      "method": "npm run build",
+      "result": "pass",
+      "evidence": ["exit_code:0"],
+      "doesNotProve": ["Propr routing reaches the correct backend account"]
+    }
+  ],
+  "stop": [
+    "Do not mark routing complete until the POST path is exercised"
+  ],
+  "nextAction": "Run the POST integration test with a pinned test proprAccountId."
+}

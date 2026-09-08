@@ -1,0 +1,29 @@
+{
+  "protocolVersion": "0.1",
+  "id": "art_comms_020",
+  "createdAt": "2026-09-08T15:00:00.000Z",
+  "asOf": "2026-09-08T14:59:30.000Z",
+  "producer": "ops.agent",
+  "goal": "Notify the project owner once that deployment completed.",
+  "status": "current",
+  "outputs": [
+    {
+      "kind": "text",
+      "text": "Deployment notification sent."
+    }
+  ],
+  "assumptions": [],
+  "unknowns": [],
+  "verification": [],
+  "effects": [
+    {
+      "action": "Sent deployment notification",
+      "status": "completed",
+      "evidence": ["message:99381"]
+    }
+  ],
+  "stop": [
+    "Do not send a second deployment notification"
+  ],
+  "nextAction": null
+}
