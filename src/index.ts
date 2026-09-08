@@ -4,6 +4,7 @@ export type {
   CreateRemnantInput,
   CreateRemnantOptions,
   DataOutput,
+  Evidence,
   FileOutput,
   OutputBase,
   ReferenceOutput,
@@ -27,9 +28,10 @@ export {
   ulid,
 } from './create.js';
 export { parseRemnant } from './parse.js';
-export { serializeRemnant, canonicalizeRemnant } from './serialize.js';
+export { serializeRemnant, canonicalizeRemnant, canonicalBytes } from './serialize.js';
 export { validateRemnant, isAbsolutePath, isIsoTimestamp } from './schema.js';
 export {
+  addEvidence,
   addOutput,
   addStop,
   addUnknown,
@@ -37,6 +39,7 @@ export {
   recordEffect,
   supersede,
 } from './helpers.js';
+export { resolveCurrent, type RemnantConflict, type RemnantResolution, type ConflictReason } from './resolve.js';
 export { renderRemnantForAgent, type RenderRemnantOptions, type OutputRenderMode } from './render.js';
 export { auditRemnant, type AuditOptions, type RemnantAudit } from './audit.js';
 export { redactRemnant } from './redact.js';

@@ -188,6 +188,7 @@ describe('serialize/parse', () => {
         },
       ],
       stop: ['Do not deploy'],
+      evidence: [{ type: 'git-commit', uri: 'git:abc123', claim: 'HEAD at abc123' }],
       extensions: { 'com.artifice.finance': { n: 1 } },
     });
     const json = serializeRemnant(remnant);

@@ -1,6 +1,7 @@
 import { createRemnant } from './create.js';
 import type {
   CreateRemnantInput,
+  Evidence,
   Remnant,
   RemnantOutput,
   SideEffect,
@@ -29,6 +30,10 @@ export function addStop(remnant: Remnant, stop: string): Remnant {
 
 export function recordEffect(remnant: Remnant, effect: SideEffect): Remnant {
   return { ...clone(remnant), effects: [...(remnant.effects ?? []), { ...effect }] };
+}
+
+export function addEvidence(remnant: Remnant, evidence: Evidence): Remnant {
+  return { ...clone(remnant), evidence: [...(remnant.evidence ?? []), { ...evidence }] };
 }
 
 export function supersede(previous: Remnant, nextInput: CreateRemnantInput): Remnant {

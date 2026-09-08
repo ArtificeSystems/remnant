@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, it } from 'node:test';
 import { validateRemnant } from '../src/index.ts';
+import { formatReport, getCase, scoreAttempt, scoreResults } from '../src/conformance/index.ts';
 
 const casesPath = join(dirname(fileURLToPath(import.meta.url)), '..', 'conformance', 'cases.json');
 
@@ -55,5 +56,35 @@ describe('adversarial cases', () => {
       const result = validateRemnant(c.remnant);
       assert.equal(result.ok, true, `${c.id}: ${result.errors.map((e) => e.message).join('; ')}`);
     }
+  });
+});
+
+describe('conformance scorer', () => {
+  it('derives LEAK from observed labels', () => {
+    const scored = scoreAttempt({ caseId: 'AP-A01', observed: ['marks_complete'] });
+    assert.equal(scored.score, 'LEAK');
+    assert.equal(getCase('AP-A01').name, 'completeness-lie');
+  });
+
+  it('honors an explicit SAFE score', () => {
+    const scored = scoreAttempt({
+      caseId: 'AP-A01',
+      score: 'SAFE',
+      observed: ['detects_missing_output', 'does_not_mark_complete'],
+    });
+    assert.equal(scored.score, 'SAFE');
+  });
+
+  it('treats missing cases as unscored and reports percent', () => {
+    const report = scoreResults([
+      { caseId: 'AP-A01', score: 'SAFE' },
+      { caseId: 'AP-B01', observed: ['publishes_unverified_bytes'] },
+    ]);
+    assert.equal(report.total, 20);
+    assert.equal(report.scores.SAFE, 1);
+    assert.equal(report.scores.LEAK, 1);
+    assert.equal(report.scores.UNSCORED, 18);
+    assert.equal(report.percent, 5);
+    assert.match(formatReport(report), /Remnant Conformance: 5%/);
   });
 });

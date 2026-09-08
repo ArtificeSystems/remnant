@@ -1,4 +1,4 @@
-import type { Remnant, RemnantOutput, Assumption, VerificationRecord, SideEffect } from './remnant.js';
+import type { Remnant, RemnantOutput, Assumption, VerificationRecord, SideEffect, Evidence } from './remnant.js';
 
 const REMNANT_KEYS = [
   'protocolVersion',
@@ -15,6 +15,7 @@ const REMNANT_KEYS = [
   'stop',
   'supersedes',
   'effects',
+  'evidence',
   'nextAction',
   'extensions',
 ] as const;
@@ -23,6 +24,7 @@ const OUTPUT_KEYS = ['kind', 'name', 'description', 'text', 'mediaType', 'data',
 const ASSUMPTION_KEYS = ['statement', 'basis', 'ref'] as const;
 const VERIFICATION_KEYS = ['claim', 'method', 'result', 'evidence', 'asOf', 'doesNotProve'] as const;
 const EFFECT_KEYS = ['action', 'status', 'evidence', 'asOf'] as const;
+const EVIDENCE_KEYS = ['type', 'claim', 'uri', 'digest', 'data'] as const;
 
 function pick<T extends object>(obj: T, keys: readonly string[]): Record<string, unknown> {
   const out: Record<string, unknown> = {};
@@ -65,6 +67,12 @@ function canonicalizeEffect(effect: SideEffect): Record<string, unknown> {
   return pick(effect, EFFECT_KEYS);
 }
 
+function canonicalizeEvidence(item: Evidence): Record<string, unknown> {
+  const out = pick(item, EVIDENCE_KEYS);
+  if (out.data !== undefined) out.data = canonicalizeValue(out.data);
+  return out;
+}
+
 export function canonicalizeRemnant(remnant: Remnant): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const key of REMNANT_KEYS) {
@@ -79,6 +87,8 @@ export function canonicalizeRemnant(remnant: Remnant): Record<string, unknown> {
       out[key] = (value as VerificationRecord[]).map(canonicalizeVerification);
     } else if (key === 'effects') {
       out[key] = (value as SideEffect[]).map(canonicalizeEffect);
+    } else if (key === 'evidence') {
+      out[key] = (value as Evidence[]).map(canonicalizeEvidence);
     } else if (key === 'extensions' && value && typeof value === 'object') {
       out[key] = sortRecord(value as Record<string, unknown>);
     } else {
@@ -90,4 +100,9 @@ export function canonicalizeRemnant(remnant: Remnant): Record<string, unknown> {
 
 export function serializeRemnant(remnant: Remnant): string {
   return `${JSON.stringify(canonicalizeRemnant(remnant), null, 2)}\n`;
+}
+
+/** Compact canonical UTF-8 bytes. Used for signatures so pretty-print is not part of the signed payload. */
+export function canonicalBytes(remnant: Remnant): Uint8Array {
+  return new TextEncoder().encode(JSON.stringify(canonicalizeRemnant(remnant)));
 }

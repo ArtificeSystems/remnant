@@ -84,6 +84,14 @@ const sideEffect = z.object({
   asOf: z.string().optional(),
 });
 
+export const evidenceShape = z.object({
+  type: z.string().min(1),
+  claim: z.string().optional(),
+  uri: z.string().optional(),
+  digest: z.string().optional(),
+  data: z.unknown().optional(),
+});
+
 export const remnantShape = z.object({
   protocolVersion: z.literal('0.1'),
   id: z.string().min(1),
@@ -99,6 +107,7 @@ export const remnantShape = z.object({
   stop: z.array(z.string()),
   supersedes: z.array(z.string()).optional(),
   effects: z.array(sideEffect).optional(),
+  evidence: z.array(evidenceShape).optional(),
   nextAction: z.string().nullable().optional(),
   extensions: z.record(z.string(), z.unknown()).optional(),
 });

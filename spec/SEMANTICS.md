@@ -45,6 +45,40 @@ If a hash is present and a downstream action depends on those exact bytes, recom
 
 Symlinks: Node helpers hash the target. Relative local paths are invalid in canonical serialization.
 
+## Evidence
+
+Optional `evidence` attachments (`type`, optional `claim` / `uri` / `digest` / `data`) are uninterpreted by Core. A digest is not a truth claim. A signature on the envelope is not a claim about the work.
+
+## Signing
+
+`signRemnant()` signs the Remnant, not the signature container.
+
+The signed payload is the UTF-8 encoding of compact `JSON.stringify(canonicalizeRemnant(remnant))`:
+
+- Core canonical object (fixed field order, sorted object/extension keys, omitted `undefined`)
+- no pretty-print whitespace
+- never includes `signature`, `publicKey`, or the `SignedRemnant` wrapper
+
+Pretty-printed `serializeRemnant()` is for humans. It is not the signed payload.
+
+The same Remnant value MUST produce identical canonical bytes on every runtime that implements this algorithm. A signature proves those bytes were signed by a holder of the key. It does not prove the claims inside are true.
+
+## Resolution
+
+`resolveCurrent(remnants)` classifies a set by explicit `supersedes` and `rejected`. Two `current` remnants conflict only when their `goal` strings are identical (`===`) and neither supersedes the other.
+
+`"Fix login"` and `"Repair authentication"` do not conflict. Core does not trim, case-fold, or semantically match goals.
+
+Do not break ties by filename, polish, or producer tone.
+
+## Interop
+
+A2A and MCP helpers transport a Remnant. They must not upgrade trust.
+
+Round-tripping through `toA2AArtifact` / `fromA2AArtifact` (when Remnant metadata is present) or `toMcpResource` / `fromMcpResource` MUST preserve `status`, `verification`, `stop`, `evidence`, `unknowns`, `assumptions`, and `effects`. `draft` must not become `current`. Empty verification must stay empty. `stop` must not be dropped.
+
+Reconstructing from A2A parts when Remnant metadata is absent is a new draft Remnant, not an upgrade of the original.
+
 ## Secrets
 
 `redactRemnant()` is best-effort. Do not put plaintext secrets in Remnants. It is not a DLP engine.

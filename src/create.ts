@@ -89,6 +89,9 @@ export function createRemnant(input: CreateRemnantInput, options: CreateRemnantO
   if (input.effects && input.effects.length > 0) {
     remnant.effects = input.effects.map((e) => ({ ...e }));
   }
+  if (input.evidence && input.evidence.length > 0) {
+    remnant.evidence = input.evidence.map((e) => ({ ...e }));
+  }
   if (input.extensions) {
     remnant.extensions = { ...input.extensions };
   }

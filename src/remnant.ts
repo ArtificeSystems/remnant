@@ -41,6 +41,15 @@ export interface SideEffect {
   asOf?: string;
 }
 
+/** Typed attachment. Core does not interpret `type`. A digest is not a truth claim. */
+export interface Evidence {
+  type: string;
+  claim?: string;
+  uri?: string;
+  digest?: string;
+  data?: unknown;
+}
+
 export interface OutputBase {
   name?: string;
   description?: string;
@@ -94,6 +103,7 @@ export interface Remnant {
   stop: string[];
   supersedes?: string[];
   effects?: SideEffect[];
+  evidence?: Evidence[];
   nextAction?: string | null;
   extensions?: Record<string, unknown>;
 }
@@ -114,6 +124,7 @@ export type CreateRemnantInput = {
   stop?: string[];
   supersedes?: string[];
   effects?: SideEffect[];
+  evidence?: Evidence[];
   nextAction?: string | null;
   extensions?: Record<string, unknown>;
 };
