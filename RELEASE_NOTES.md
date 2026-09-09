@@ -38,7 +38,7 @@ First-class fields on eng-status cards and Remnant envelopes: `authority`, `not_
 
 ## Tests
 
-Full suite: **73 passed**, **0 failed** (18 suites).
+Full suite: **77 passed**, **0 failed** (18 suites).
 
 Covers store persistence, supersession, `isSafeToAct` STOP on 14 adversarial cases, proof fail-closed, eng-status producer, and all v0.2 tests.
 
