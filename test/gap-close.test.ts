@@ -33,6 +33,12 @@ function minimalCurrent(overrides: Record<string, unknown> = {}) {
   });
 }
 
+const ENG_AS_OF = '2026-09-08T15:00:00.000Z';
+
+const maxAgeByCase: Record<string, number> = {
+  'AP-C01': 60 * 60 * 1000,
+};
+
 describe('CurrentStore', () => {
   it('puts and resolves the current artifact by id', () => {
     const store = new InMemoryCurrentStore();
@@ -107,6 +113,31 @@ describe('isSafeToAct STOP', () => {
     assert.ok(result.stop.some((s) => s.includes('signature')));
   });
 
+  it('stops when as_of is missing', () => {
+    const remnant = minimalCurrent();
+    delete (remnant as { asOf?: string }).asOf;
+    const result = isSafeToAct(signed(remnant, keys), { publicKey: keys.publicKey });
+    assert.equal(result.safe, false);
+    assert.ok(result.stop.some((s) => s.includes('as_of is missing')));
+  });
+
+  it('stops when asOf exceeds caller-supplied maxAge', () => {
+    const remnant = minimalCurrent({ asOf: '2020-01-01T00:00:00.000Z' });
+    const result = isSafeToAct(signed(remnant, keys), {
+      publicKey: keys.publicKey,
+      now: new Date('2026-09-08T16:00:00.000Z'),
+      maxAge: 60 * 60 * 1000,
+    });
+    assert.equal(result.safe, false);
+    assert.ok(result.stop.some((s) => s.includes('maxAge')));
+  });
+
+  it('does not apply a stale window when maxAge is omitted', () => {
+    const remnant = minimalCurrent({ asOf: '2020-01-01T00:00:00.000Z' });
+    const result = isSafeToAct(signed(remnant, keys), { publicKey: keys.publicKey });
+    assert.equal(result.safe, true);
+  });
+
   const machineStopCases = [
     'AP-A01',
     'AP-C01',
@@ -131,6 +162,7 @@ describe('isSafeToAct STOP', () => {
       const result = isSafeToAct(signed(remnant, keys), {
         publicKey: keys.publicKey,
         now: new Date('2026-09-08T16:00:00.000Z'),
+        maxAge: maxAgeByCase[caseId],
       });
       assert.equal(result.safe, false, `${caseId} should STOP: ${result.stop.join('; ')}`);
       assert.ok(result.stop.length > 0);
@@ -201,9 +233,11 @@ describe('eng-status producer', () => {
       not_checked: ['Production SSO path'],
       lane: 'platform',
       stop: ['Do not deploy to production'],
+      as_of: ENG_AS_OF,
       producer: 'cursor.agent',
     });
     assert.equal(card.status, 'current');
+    assert.equal(card.locked, true);
     assert.deepEqual(card.supersedes, ['art_prev']);
     assert.equal(card.authority, 'eng-lead@example.com');
     assert.equal(card.claim, 'Router patch ready for staging');
@@ -211,22 +245,71 @@ describe('eng-status producer', () => {
     assert.deepEqual(card.not_checked, ['Production SSO path']);
     assert.equal(card.lane, 'platform');
     assert.deepEqual(card.stop, ['Do not deploy to production']);
+    assert.equal(card.as_of, ENG_AS_OF);
   });
 
-  it('produces a remnant envelope without calling external products', () => {
+  it('maps first-class fields onto the remnant envelope', () => {
     const { card, remnant } = produceEngStatus({
       status: 'current',
       authority: 'eng-lead@example.com',
       claim: 'Lint clean on router patch',
       evidence: [{ type: 'ci', uri: 'https://ci.example/runs/9' }],
+      not_checked: ['Production SSO path'],
+      lane: 'platform',
+      stop: ['Do not deploy to production'],
+      as_of: ENG_AS_OF,
+      producer: 'cursor.agent',
+    });
+    assert.equal(card.locked, true);
+    assert.equal(remnant.status, 'current');
+    assert.equal(remnant.locked, true);
+    assert.equal(remnant.authority, card.authority);
+    assert.deepEqual(remnant.notChecked, card.not_checked);
+    assert.equal(remnant.lane, card.lane);
+    assert.deepEqual(remnant.stop, card.stop);
+    assert.equal(remnant.asOf, card.as_of);
+  });
+
+  it('distinguishes current (store head) from locked (authority authorized)', () => {
+    const store = createCurrentStore();
+    const goal = 'Router patch ready for staging';
+
+    const { remnant: authorized } = produceEngStatus({
+      status: 'current',
+      locked: true,
+      authority: 'eng-lead@example.com',
+      claim: goal,
+      evidence: [{ type: 'git-commit', uri: 'git:abc123' }],
       not_checked: [],
       lane: 'platform',
       stop: [],
+      as_of: ENG_AS_OF,
       producer: 'cursor.agent',
+      goal,
     });
-    assert.equal(card.lane, 'platform');
-    assert.equal(remnant.status, 'current');
-    assert.ok(remnant.extensions?.['com.artifice.eng-status']);
+    store.put(authorized);
+    assert.equal(authorized.status, 'current');
+    assert.equal(authorized.locked, true);
+    assert.deepEqual(store.resolveCurrent(authorized.id), authorized);
+
+    const { remnant: newerUnlocked } = produceEngStatus({
+      status: 'current',
+      locked: false,
+      supersedes: [authorized.id],
+      authority: 'eng-lead@example.com',
+      claim: goal,
+      evidence: [{ type: 'ci', uri: 'https://ci.example/runs/11' }],
+      not_checked: [],
+      lane: 'platform',
+      stop: [],
+      as_of: ENG_AS_OF,
+      producer: 'cursor.agent',
+      goal,
+    });
+    store.put(newerUnlocked);
+    assert.equal(store.resolveCurrent(authorized.id), undefined);
+    assert.deepEqual(store.resolveCurrent(newerUnlocked.id), newerUnlocked);
+    assert.equal(newerUnlocked.locked, false);
   });
 
   it('put and resolveCurrent via eng-status producer — older id is not current after supersede', () => {
@@ -241,6 +324,7 @@ describe('eng-status producer', () => {
       not_checked: ['Production SSO path'],
       lane: 'platform',
       stop: ['Do not deploy to production'],
+      as_of: ENG_AS_OF,
       producer: 'cursor.agent',
       goal,
     });
@@ -256,6 +340,7 @@ describe('eng-status producer', () => {
       not_checked: [],
       lane: 'platform',
       stop: [],
+      as_of: ENG_AS_OF,
       producer: 'cursor.agent',
       goal,
     });

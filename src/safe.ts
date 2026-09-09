@@ -3,14 +3,14 @@ import { verifyRemnantSignature } from './crypto/index.js';
 import type { Remnant } from './remnant.js';
 import { isProofEligible, proofDiagnostics } from './proof.js';
 import type { CurrentStore } from './store.js';
-import { validateRemnant } from './schema.js';
+import { isIsoTimestamp, validateRemnant } from './schema.js';
 
 export interface SafeToActOptions {
   store?: CurrentStore;
   publicKey?: string;
   now?: Date;
-  /** Maximum age in ms before `asOf` is treated as stale for live-state goals. */
-  staleAfterMs?: number;
+  /** Caller-supplied max age in ms for `asOf`. No default; omit to skip age check. */
+  maxAge?: number;
 }
 
 export interface SafeToActResult {
@@ -20,7 +20,6 @@ export interface SafeToActResult {
 
 const MUTATE_RE =
   /\b(commit|push|deploy|merge|ship|mutate|fix|apply|trade|close|publish|send|mark\b.*\bcomplete)\b/i;
-const LIVE_GOAL_RE = /\b(current|live|now|today|real[- ]?time)\b/i;
 const CONFIDENCE_RE = /\b(highly confident|high confidence|fully fixed|production-ready)\b/i;
 
 function push(stop: string[], reason: string): void {
@@ -128,11 +127,14 @@ function completenessLie(remnant: Remnant): boolean {
   return wantsComplete && !inspected && fileOutputs.some((o) => o.kind === 'file' && !o.sha256);
 }
 
-function staleLiveState(remnant: Remnant, now: Date, staleAfterMs: number): boolean {
-  if (!LIVE_GOAL_RE.test(remnant.goal)) return false;
+function asOfPresent(remnant: Remnant): boolean {
+  return Boolean(remnant.asOf?.trim()) && isIsoTimestamp(remnant.asOf);
+}
+
+function exceedsMaxAge(remnant: Remnant, now: Date, maxAge: number): boolean {
   const asOf = Date.parse(remnant.asOf);
   if (!Number.isFinite(asOf)) return false;
-  return now.getTime() - asOf > staleAfterMs;
+  return now.getTime() - asOf > maxAge;
 }
 
 function supersessionValid(remnant: Remnant, store?: CurrentStore): boolean {
@@ -161,12 +163,9 @@ function requiredEvidencePresent(remnant: Remnant): boolean {
   return true;
 }
 
-function adversarialStops(remnant: Remnant, now: Date, staleAfterMs: number): string[] {
+function adversarialStops(remnant: Remnant): string[] {
   const stop: string[] = [];
 
-  if (staleLiveState(remnant, now, staleAfterMs)) {
-    push(stop, 'asOf is stale for a live-state goal');
-  }
   if (hasCompletedEffect(remnant) && blocksRepeat(remnant) && nextActionSuggestsContinue(remnant)) {
     push(stop, 'completed side effect must not be repeated');
   }
@@ -213,13 +212,17 @@ function adversarialStops(remnant: Remnant, now: Date, staleAfterMs: number): st
 
 /**
  * Machine STOP gate. Returns false unless status is current, signature verifies,
- * supersession is valid, required evidence is present, and adversarial traps are absent.
+ * as_of is present, supersession is valid, required evidence is present, and adversarial traps are absent.
+ * Optional maxAge is caller-supplied; there is no default stale window.
  */
 export function isSafeToAct(signed: SignedRemnant, options: SafeToActOptions = {}): SafeToActResult {
   const stop: string[] = [];
   const remnant = signed.remnant;
   const now = options.now ?? new Date();
-  const staleAfterMs = options.staleAfterMs ?? 60 * 60 * 1000;
+
+  if (!asOfPresent(remnant)) {
+    push(stop, 'as_of is missing');
+  }
 
   const shape = validateRemnant(remnant);
   if (!shape.ok) {
@@ -247,7 +250,11 @@ export function isSafeToAct(signed: SignedRemnant, options: SafeToActOptions = {
     for (const issue of proofDiagnostics(remnant)) push(stop, issue);
   }
 
-  for (const reason of adversarialStops(remnant, now, staleAfterMs)) {
+  if (options.maxAge !== undefined && exceedsMaxAge(remnant, now, options.maxAge)) {
+    push(stop, 'asOf exceeds maxAge');
+  }
+
+  for (const reason of adversarialStops(remnant)) {
     push(stop, reason);
   }
 

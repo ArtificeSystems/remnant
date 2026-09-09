@@ -410,7 +410,7 @@ Receivers should not use it as current state except for historical analysis.
 
 The work product or decision has been explicitly rejected and must not be resurrected as the active path without new authority.
 
-There is **no** `locked` status. Use `current` when presenting the active work product for a goal. Informal prose such as “status locked” is not a valid enum value.
+There is **no** `locked` lifecycle status. Use `current` when presenting the active work product for a goal. Authority authorization is represented by the first-class boolean field **`locked`**, distinct from store currentness.
 
 ---
 
@@ -964,7 +964,7 @@ while insufficient to:
 
 - deploy that code to production.
 
-The SDK therefore exposes diagnostics rather than a universal `isSafe()` boolean.
+v1 ships **`isSafeToAct()`** as a contextual machine STOP gate for signed Remnants — not a universal safety boolean. It also ships **`auditRemnant()`** diagnostics for file and shape checks. Callers decide whether diagnostics or `stop` reasons block their intended action.
 
 ---
 

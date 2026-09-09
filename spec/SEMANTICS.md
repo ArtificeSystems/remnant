@@ -63,9 +63,16 @@ Pretty-printed `serializeRemnant()` is for humans. It is not the signed payload.
 
 The same Remnant value MUST produce identical canonical bytes on every runtime that implements this algorithm. A signature proves those bytes were signed by a holder of the key. It does not prove the claims inside are true.
 
-## Envelope status
+## Envelope status and authorization
 
-Lifecycle status is one of: `draft`, `partial`, `current`, `superseded`, `rejected`. There is no `locked` status. Use **`current`** when a Remnant is the active work product for its goal.
+Lifecycle status is one of: `draft`, `partial`, `current`, `superseded`, `rejected`.
+
+- **`status: current`** — active work product for a goal; the current store's `resolveCurrent(id)` returns the latest id per exact goal string.
+- **`locked: true`** — first-class boolean on the artifact: authority has authorized this artifact. Not a lifecycle enum value.
+
+First-class fields (eng-status card and Remnant envelope): `authority`, `not_checked`/`notChecked`, `lane`, `stop`, `as_of`/`asOf`.
+
+`isSafeToAct()` returns false when `as_of`/`asOf` is missing. Pass optional **`maxAge`** (ms) for a caller-supplied freshness window; there is no protocol default stale window.
 
 ## Resolution
 

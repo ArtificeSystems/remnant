@@ -5,23 +5,29 @@ import { serializeRemnant } from '../serialize.js';
 export interface EngStatusCard {
   status: RemnantStatus;
   supersedes?: string[];
+  /** Authority has authorized this artifact. Distinct from lifecycle `status: current`. */
+  locked: boolean;
   authority: string;
   claim: string;
   evidence: Evidence[];
   not_checked: string[];
   lane: string;
   stop: string[];
+  /** Freshness boundary for represented state (maps to Remnant `asOf`). */
+  as_of: string;
 }
 
 export interface WriteEngStatusInput {
   status: RemnantStatus;
   supersedes?: string[];
+  locked?: boolean;
   authority: string;
   claim: string;
   evidence?: Evidence[];
   not_checked?: string[];
   lane: string;
   stop?: string[];
+  as_of: string;
   producer: string;
   goal?: string;
 }
@@ -32,12 +38,14 @@ export interface WriteEngStatusInput {
 export function writeEngStatusCard(input: WriteEngStatusInput): EngStatusCard {
   const card: EngStatusCard = {
     status: input.status,
+    locked: input.locked ?? Boolean(input.authority.trim()),
     authority: input.authority,
     claim: input.claim,
     evidence: (input.evidence ?? []).map((e) => ({ ...e })),
     not_checked: [...(input.not_checked ?? [])],
     lane: input.lane,
     stop: [...(input.stop ?? [])],
+    as_of: input.as_of,
   };
   if (input.supersedes && input.supersedes.length > 0) {
     card.supersedes = [...input.supersedes];
@@ -47,7 +55,6 @@ export function writeEngStatusCard(input: WriteEngStatusInput): EngStatusCard {
 
 /** Map an eng-status card to a Remnant envelope for storage and signing. */
 export function engStatusToRemnant(card: EngStatusCard, input: WriteEngStatusInput): Remnant {
-  const unknowns = [...card.not_checked];
   const verification =
     card.evidence.length > 0
       ? [
@@ -64,20 +71,17 @@ export function engStatusToRemnant(card: EngStatusCard, input: WriteEngStatusInp
     producer: input.producer,
     goal: input.goal ?? card.claim,
     status: card.status,
+    asOf: card.as_of,
     outputs: [{ kind: 'text', text: card.claim }],
-    assumptions: [{ statement: `Authority: ${card.authority}`, basis: 'external', ref: card.authority }],
-    unknowns,
+    unknowns: [...card.not_checked],
+    notChecked: [...card.not_checked],
+    authority: card.authority,
+    lane: card.lane,
+    locked: card.locked,
     verification,
     stop: card.stop,
     supersedes: card.supersedes,
     evidence: card.evidence,
-    extensions: {
-      'com.artifice.eng-status': {
-        lane: card.lane,
-        authority: card.authority,
-        not_checked: card.not_checked,
-      },
-    },
   });
 
   return remnant;

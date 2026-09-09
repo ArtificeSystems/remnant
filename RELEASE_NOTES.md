@@ -8,9 +8,14 @@
 
 Remnant v1 is a **protocol library** for durable, accountable agent work state: create and validate Remnant JSON envelopes, classify currentness and conflicts, optionally sign with Ed25519, audit file outputs, and score adversarial conformance cases. v1 adds a lightweight current store (`put` / `resolveCurrent`), a contextual machine STOP gate (`isSafeToAct`), proof fail-closed rules, and a demo `eng-status` producer — all without shipping an agent runtime, LLM runner, PKI, second store, universal stale window, or integrations with Grail, Saylis, Oroboros, or Risk.
 
-## Envelope status
+## Envelope status and authorization
 
-Lifecycle status values are: `draft`, `partial`, `current`, `superseded`, `rejected`. There is no `locked` status. When a work product is the active handoff for its goal, set **`status: 'current'`**. Prose such as “status locked” belongs in claim text only; it is not a valid enum value.
+Lifecycle status values are: `draft`, `partial`, `current`, `superseded`, `rejected`.
+
+- **`status: current`** — this Remnant is the active work product for its goal; the current store resolves the latest id per goal.
+- **`locked: true`** — first-class boolean: authority has authorized this artifact. This is not a lifecycle status value.
+
+First-class fields on eng-status cards and Remnant envelopes: `authority`, `not_checked`, `lane`, `stop`, `as_of` (Remnant wire field `asOf`).
 
 ## Shipped in v1 (since v0.2.0)
 
@@ -33,7 +38,7 @@ Lifecycle status values are: `draft`, `partial`, `current`, `superseded`, `rejec
 
 ## Tests
 
-Full suite: **72 passed**, **0 failed** (18 suites).
+Full suite: **73 passed**, **0 failed** (18 suites).
 
 Covers store persistence, supersession, `isSafeToAct` STOP on 14 adversarial cases, proof fail-closed, eng-status producer, and all v0.2 tests.
 
@@ -42,4 +47,4 @@ Covers store persistence, supersession, `isSafeToAct` STOP on 14 adversarial cas
 1. Bump dependency to `@artifice/remnant@1.0.0` when published.
 2. Replace any doc or code assuming “no store” — use `createCurrentStore()` when tracking current artifacts by goal.
 3. Replace any assumption that `isSafeToAct` is absent — it requires a signed Remnant and returns `{ safe, stop }`.
-4. Use `status: 'current'`, not `locked`, for active work products.
+4. Use `status: 'current'` for the store head; set `locked: true` when authority has authorized the artifact. Pass explicit `as_of` on eng-status cards.

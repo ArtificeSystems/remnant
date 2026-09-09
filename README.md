@@ -42,7 +42,16 @@ This package is the **v1.0** TypeScript implementation of Remnant Protocol. It i
 - Adversarial conformance battery (cases A–T) and CLI
 - **`eng-status` demo producer** — maps engineering status cards to Remnant envelopes without calling other products
 
-Envelope lifecycle status is one of: `draft` | `partial` | `current` | `superseded` | `rejected`. There is **no** `locked` status. Use `current` when presenting the active work product for a goal.
+### `current` vs `locked`
+
+These are separate concepts:
+
+- **`status: current`** — lifecycle: this Remnant is the active work product for its goal. The **current store** tracks which id is latest per goal (`put` / `resolveCurrent`).
+- **`locked: true`** — authority has authorized this artifact. This is a first-class boolean field, not a lifecycle status value and not prose buried in `claim`.
+
+Envelope lifecycle status remains: `draft` | `partial` | `current` | `superseded` | `rejected`.
+
+Eng-status cards and Remnant envelopes also carry first-class fields: `authority`, `not_checked` / `notChecked`, `lane`, `stop`, and `as_of` (maps to Remnant `asOf`).
 
 ## What is not in v1
 
@@ -130,27 +139,31 @@ Track one current Remnant per exact goal string in-process or on disk:
 import { createCurrentStore, produceEngStatus } from '@artifice/remnant';
 
 const store = createCurrentStore(); // or createCurrentStore({ path: './current.json' })
-const { remnant } = produceEngStatus({
+const { card, remnant } = produceEngStatus({
   status: 'current',
+  locked: true,
   authority: 'eng-lead@example.com',
   claim: 'Router patch ready for staging',
   evidence: [{ type: 'ci', uri: 'https://ci.example/runs/9' }],
   not_checked: ['Production SSO path'],
   lane: 'platform',
   stop: ['Do not deploy to production'],
+  as_of: '2026-09-08T15:00:00.000Z',
   producer: 'cursor.agent',
 });
 
 store.put(remnant);
-store.resolveCurrent(remnant.id); // → remnant
-store.resolveCurrent('older-id'); // → undefined when superseded or not current
+store.resolveCurrent(remnant.id); // → remnant (latest for goal)
+card.locked; // → true (authority authorized)
 ```
 
 A new `current` for an existing goal requires explicit `supersedes`.
 
 ## Machine STOP gate
 
-`isSafeToAct()` returns `{ safe, stop }` for a **signed** Remnant. It is a contextual gate, not a universal “safe for everything” boolean. It requires `status: 'current'`, valid signature, required evidence, valid supersession (when a store is supplied), and passes adversarial trap checks.
+`isSafeToAct()` returns `{ safe, stop }` for a **signed** Remnant. It is a contextual gate, not a universal “safe for everything” boolean. It requires `status: 'current'`, a present **`as_of`** (`asOf`), valid signature, required evidence, valid supersession (when a store is supplied), and passes adversarial trap checks.
+
+Pass optional **`maxAge`** (milliseconds) to stop when `asOf` is older than the caller-supplied window. There is **no default** stale window.
 
 ```ts
 import { generateSigningKeyPair, signRemnant } from '@artifice/remnant/crypto';
@@ -158,7 +171,7 @@ import { isSafeToAct } from '@artifice/remnant';
 
 const keys = generateSigningKeyPair();
 const signed = signRemnant(remnant, keys.privateKey);
-isSafeToAct(signed, { publicKey: keys.publicKey, store });
+isSafeToAct(signed, { publicKey: keys.publicKey, store, maxAge: 60 * 60 * 1000 });
 ```
 
 ## A2A / MCP

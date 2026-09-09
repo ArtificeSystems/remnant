@@ -18,7 +18,9 @@ First stable protocol-library release after the gap-close work merged in remnant
 
 - Package version from `0.2.1` to `1.0.0`
 - README and spec audit: docs now match shipped APIs; removed stale claims that store and `isSafeToAct()` were absent
-- Documented envelope lifecycle status (`draft` | `partial` | `current` | `superseded` | `rejected`); **`current`**, not `locked`
+- Documented envelope lifecycle status (`draft` | `partial` | `current` | `superseded` | `rejected`) and first-class **`locked`** boolean (authority authorized; distinct from `status: current`)
+- First-class eng-status / Remnant fields: `authority`, `not_checked`/`notChecked`, `lane`, `stop`, `as_of`/`asOf`
+- `isSafeToAct()` requires present `as_of`; optional caller-supplied `maxAge` replaces any default stale window
 
 ### Not in this release
 

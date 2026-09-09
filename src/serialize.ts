@@ -17,6 +17,10 @@ const REMNANT_KEYS = [
   'effects',
   'evidence',
   'nextAction',
+  'locked',
+  'authority',
+  'notChecked',
+  'lane',
   'extensions',
 ] as const;
 
