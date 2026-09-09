@@ -4,20 +4,9 @@ All notable changes to `@artifice/remnant` are documented here.
 
 ## [Unreleased]
 
-### Added
+## [1.0.1] - 2026-09-09
 
-- **Host adapter boundary** — `createHostAdapter()` binds `put`, `resolveCurrent`, and `isSafeToAct` for a host runtime. No HTTP client
-- **`operator-lock` demo producer** — `writeOperatorLockCard()` / `produceOperatorLock()` write one paper card: `accountId: null`, `orders: allowed-when-pinned`, `paper: true`, using existing first-class fields (`authority`, `not_checked`, `lane`, `stop`, `as_of`, `locked` vs `status: current`)
-- Unit test `test/host-adapter.test.ts`
-
-### Changed
-
-- Standalone package cleanup: removed internal product references from docs, examples, and identifiers
-
-### Not in this change
-
-- Not a v0.3 shell
-- No external HTTP client or service wire-up
+Package version bump for PolyForm Noncommercial tagged release. Source/GitHub only.
 
 ## [1.0.0] — 2026-09-09
 

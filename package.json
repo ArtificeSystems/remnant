@@ -1,6 +1,6 @@
 {
   "name": "@artifice/remnant",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Remnant Protocol: durable, accountable agent work state.",
   "type": "module",
   "license": "PolyForm-Noncommercial-1.0.0",
