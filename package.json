@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Remnant Protocol: durable, accountable agent work state.",
   "type": "module",
-  "license": "Apache-2.0",
+  "license": "PolyForm-Noncommercial-1.0.0",
   "engines": {
     "node": ">=20"
   },

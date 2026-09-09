@@ -274,4 +274,8 @@ See `spec/` for the protocol, behavioral contract, and adversarial battery. See 
 
 ## License
 
-Apache-2.0
+Copyright 2026 Artifice Systems
+
+This software is source-available under the **PolyForm Noncommercial License 1.0.0**. You may use, study, modify, and share the software for noncommercial purposes. Commercial use requires a separate license from Artifice Systems (<https://artifice.systems>).
+
+See the [LICENSE](LICENSE) file for the full license text.
