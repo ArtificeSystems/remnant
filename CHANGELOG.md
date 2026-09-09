@@ -2,6 +2,21 @@
 
 All notable changes to `@artifice/remnant` are documented here.
 
+## [Unreleased]
+
+### Added
+
+- **Grail adapter boundary** — `createGrailAdapter()` binds `put`, `resolveCurrent`, and `isSafeToAct` for a later Engine call. No HTTP client and no trade wire
+- **`operator-lock` demo producer** — `writeOperatorLockCard()` / `produceOperatorLock()` write one paper card: `accountId: null`, `orders: allowed-when-pinned`, `paper: true`, using existing first-class fields (`authority`, `not_checked`, `lane`, `stop`, `as_of`, `locked` vs `status: current`)
+- Unit test `test/grail-adapter.test.ts`
+
+### Not in this change
+
+- No trade wire
+- Not a v0.3 shell
+- Not a redo of remnant #2
+- No call to Grail, Saylis, or Risk
+
 ## [1.0.0] — 2026-09-09
 
 First stable protocol-library release after the gap-close work merged in remnant #1 (`618b6be`).

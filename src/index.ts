@@ -66,6 +66,23 @@ export {
   type EngStatusCard,
   type WriteEngStatusInput,
 } from './producer/eng-status.js';
+export {
+  createGrailAdapter,
+  type CreateGrailAdapterOptions,
+  type GrailAdapter,
+  type GrailAdapterSafeToActOptions,
+} from './grail/adapter.js';
+export {
+  OPERATOR_LOCK_ORDERS,
+  OPERATOR_LOCK_PAPER_STOP,
+  operatorLockToRemnant,
+  produceOperatorLock,
+  serializeOperatorLockCard,
+  writeOperatorLockCard,
+  writeOperatorLockFile,
+  type OperatorLockCard,
+  type WriteOperatorLockInput,
+} from './producer/operator-lock.js';
 export { renderRemnantForAgent, type RenderRemnantOptions, type OutputRenderMode } from './render.js';
 export { auditRemnant, type AuditOptions, type RemnantAudit } from './audit.js';
 export { redactRemnant } from './redact.js';

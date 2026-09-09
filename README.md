@@ -41,6 +41,8 @@ This package is the **v1.0** TypeScript implementation of Remnant Protocol. It i
 - Node file inspection and audit helpers
 - Adversarial conformance battery (cases A–T) and CLI
 - **`eng-status` demo producer** — maps engineering status cards to Remnant envelopes without calling other products
+- **`operator-lock` demo producer** — writes one paper card (`accountId: null`, `orders: allowed-when-pinned`, `paper: true`) onto the same first-class fields. No trade wire
+- **Grail adapter boundary** — `createGrailAdapter()` exposes `put`, `resolveCurrent`, and `isSafeToAct` for a later Engine call. Function boundary only; no HTTP client
 
 ### `current` vs `locked`
 
@@ -55,7 +57,7 @@ Eng-status cards and Remnant envelopes also carry first-class fields: `authority
 
 ## What is not in v1
 
-- No Grail, Saylis, Oroboros, or Risk wire-up
+- No Grail, Saylis, Oroboros, or Risk HTTP client or trade wire (the Grail adapter is a local function boundary only)
 - No agent runner or agent mesh
 - No PKI, certificate authority, or identity network
 - No graph database or second store
