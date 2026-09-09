@@ -109,6 +109,10 @@ export const remnantShape = z.object({
   effects: z.array(sideEffect).optional(),
   evidence: z.array(evidenceShape).optional(),
   nextAction: z.string().nullable().optional(),
+  locked: z.boolean().optional(),
+  authority: z.string().optional(),
+  notChecked: z.array(z.string()).optional(),
+  lane: z.string().optional(),
   extensions: z.record(z.string(), z.unknown()).optional(),
 });
 

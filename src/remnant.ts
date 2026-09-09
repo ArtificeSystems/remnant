@@ -105,6 +105,11 @@ export interface Remnant {
   effects?: SideEffect[];
   evidence?: Evidence[];
   nextAction?: string | null;
+  /** Authority has authorized this artifact (distinct from lifecycle `status: current`). */
+  locked?: boolean;
+  authority?: string;
+  notChecked?: string[];
+  lane?: string;
   extensions?: Record<string, unknown>;
 }
 
@@ -126,6 +131,10 @@ export type CreateRemnantInput = {
   effects?: SideEffect[];
   evidence?: Evidence[];
   nextAction?: string | null;
+  locked?: boolean;
+  authority?: string;
+  notChecked?: string[];
+  lane?: string;
   extensions?: Record<string, unknown>;
 };
 

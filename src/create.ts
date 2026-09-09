@@ -92,6 +92,18 @@ export function createRemnant(input: CreateRemnantInput, options: CreateRemnantO
   if (input.evidence && input.evidence.length > 0) {
     remnant.evidence = input.evidence.map((e) => ({ ...e }));
   }
+  if (input.locked !== undefined) {
+    remnant.locked = input.locked;
+  }
+  if (input.authority !== undefined) {
+    remnant.authority = input.authority;
+  }
+  if (input.notChecked !== undefined) {
+    remnant.notChecked = [...input.notChecked];
+  }
+  if (input.lane !== undefined) {
+    remnant.lane = input.lane;
+  }
   if (input.extensions) {
     remnant.extensions = { ...input.extensions };
   }
