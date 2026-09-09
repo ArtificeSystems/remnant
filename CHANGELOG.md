@@ -6,27 +6,29 @@ All notable changes to `@artifice/remnant` are documented here.
 
 ### Added
 
-- **Grail adapter boundary** — `createGrailAdapter()` binds `put`, `resolveCurrent`, and `isSafeToAct` for a later Engine call. No HTTP client and no trade wire
+- **Host adapter boundary** — `createHostAdapter()` binds `put`, `resolveCurrent`, and `isSafeToAct` for a host runtime. No HTTP client
 - **`operator-lock` demo producer** — `writeOperatorLockCard()` / `produceOperatorLock()` write one paper card: `accountId: null`, `orders: allowed-when-pinned`, `paper: true`, using existing first-class fields (`authority`, `not_checked`, `lane`, `stop`, `as_of`, `locked` vs `status: current`)
-- Unit test `test/grail-adapter.test.ts`
+- Unit test `test/host-adapter.test.ts`
+
+### Changed
+
+- Standalone package cleanup: removed internal product references from docs, examples, and identifiers
 
 ### Not in this change
 
-- No trade wire
 - Not a v0.3 shell
-- Not a redo of remnant #2
-- No call to Grail, Saylis, or Risk
+- No external HTTP client or service wire-up
 
 ## [1.0.0] — 2026-09-09
 
-First stable protocol-library release after the gap-close work merged in remnant #1 (`618b6be`).
+First stable protocol-library release after the gap-close work merged.
 
 ### Added
 
 - **Current store** — `InMemoryCurrentStore`, `FileCurrentStore`, and `createCurrentStore()` with `put()` and `resolveCurrent(id)`; one current Remnant per exact goal string; supersession required to replace an existing current
 - **`isSafeToAct()`** — machine STOP gate for signed Remnants: requires `status: 'current'`, valid Ed25519 signature, required evidence, valid supersession when a store is supplied, and passes adversarial trap checks
 - **Proof fail-closed** — `isProofEligible()`, `proofDiagnostics()`, and `resolveCurrentProof()` reject proof-marked claims without payload
-- **`eng-status` demo producer** — `produceEngStatus()`, `writeEngStatusCard()`, and `engStatusToRemnant()` map engineering status cards to Remnant envelopes (no external product calls)
+- **`eng-status` demo producer** — `produceEngStatus()`, `writeEngStatusCard()`, and `engStatusToRemnant()` map status cards to Remnant envelopes
 - Gap-close test suite (`test/gap-close.test.ts`) covering store, STOP gate, proof rules, and eng-status producer
 
 ### Changed
@@ -39,7 +41,6 @@ First stable protocol-library release after the gap-close work merged in remnant
 
 ### Not in this release
 
-- No Grail, Saylis, Oroboros, or Risk integration
 - No agent runner, PKI, graph store, or universal stale window
 - No git tag or GitHub release (PR-only v1 preparation)
 

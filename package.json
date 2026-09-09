@@ -46,7 +46,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "tsx --test test/core.test.ts test/node.test.ts test/conformance.test.ts test/resolve.test.ts test/interop.test.ts test/gap-close.test.ts test/grail-adapter.test.ts",
+    "test": "tsx --test test/core.test.ts test/node.test.ts test/conformance.test.ts test/resolve.test.ts test/interop.test.ts test/gap-close.test.ts test/host-adapter.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

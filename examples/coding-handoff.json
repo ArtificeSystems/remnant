@@ -3,19 +3,19 @@
   "id": "art_code_001",
   "createdAt": "2026-09-08T15:00:00.000Z",
   "asOf": "2026-09-08T15:00:00.000Z",
-  "producer": "cursor.engineer",
-  "goal": "Add proprAccountId routing without changing existing Hyperliquid behavior.",
+  "producer": "cursor.agent",
+  "goal": "Fix authentication redirect bug without changing existing session behavior.",
   "status": "partial",
   "outputs": [
     {
       "kind": "file",
-      "path": "/repo/src/routes/ultra-fast-trade.ts",
+      "path": "/repo/src/auth/callback.ts",
       "mediaType": "text/typescript"
     }
   ],
   "assumptions": [],
   "unknowns": [
-    "POST /api/ultra-fast-trade integration test has not been rerun"
+    "Production SSO integration test has not been rerun"
   ],
   "verification": [
     {
@@ -23,11 +23,11 @@
       "method": "npm run build",
       "result": "pass",
       "evidence": ["exit_code:0"],
-      "doesNotProve": ["Propr routing reaches the correct backend account"]
+      "doesNotProve": ["Redirect reaches the correct callback URL in production"]
     }
   ],
   "stop": [
-    "Do not mark routing complete until the POST path is exercised"
+    "Do not mark routing complete until the SSO path is exercised"
   ],
-  "nextAction": "Run the POST integration test with a pinned test proprAccountId."
+  "nextAction": "Run the SSO integration test with a pinned test client id."
 }

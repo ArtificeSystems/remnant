@@ -33,7 +33,7 @@ export interface WriteEngStatusInput {
 }
 
 /**
- * Write one eng-status card. This is the demo producer — it does not call other products.
+ * Write one eng-status card. Demo producer only; the host must verify before acting.
  */
 export function writeEngStatusCard(input: WriteEngStatusInput): EngStatusCard {
   const card: EngStatusCard = {

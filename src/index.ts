@@ -67,11 +67,11 @@ export {
   type WriteEngStatusInput,
 } from './producer/eng-status.js';
 export {
-  createGrailAdapter,
-  type CreateGrailAdapterOptions,
-  type GrailAdapter,
-  type GrailAdapterSafeToActOptions,
-} from './grail/adapter.js';
+  createHostAdapter,
+  type CreateHostAdapterOptions,
+  type HostAdapter,
+  type HostAdapterSafeToActOptions,
+} from './host/adapter.js';
 export {
   OPERATOR_LOCK_ORDERS,
   OPERATOR_LOCK_PAPER_STOP,

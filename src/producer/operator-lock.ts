@@ -8,7 +8,7 @@ export const OPERATOR_LOCK_ORDERS = 'allowed-when-pinned' as const;
 
 export const OPERATOR_LOCK_PAPER_STOP = 'Paper only; do not send live orders';
 
-const OPERATOR_LOCK_EXTENSION = 'com.artifice.operator-lock';
+const OPERATOR_LOCK_EXTENSION = 'com.remnant.demo.operator-lock';
 
 export interface OperatorLockCard {
   /** Always null. This card never names a live account. */
@@ -64,7 +64,7 @@ function withPaperStop(stop: string[]): string[] {
 /**
  * Write one paper operator-lock card.
  * `accountId` is always null, `orders` is always `allowed-when-pinned`, and `paper` is always true.
- * This producer does not call Grail, Saylis, or Risk and does not wire a trade.
+ * Demo producer only; the host must verify before acting.
  */
 export function writeOperatorLockCard(input: WriteOperatorLockInput): OperatorLockCard {
   const asOf = requireAsOf(input.as_of);
@@ -89,7 +89,7 @@ export function writeOperatorLockCard(input: WriteOperatorLockInput): OperatorLo
   return card;
 }
 
-/** Map an operator-lock card to a Remnant envelope. No trade payload is attached. */
+/** Map an operator-lock card to a Remnant envelope. Demo payload only. */
 export function operatorLockToRemnant(card: OperatorLockCard, input: WriteOperatorLockInput): Remnant {
   if (card.accountId !== null || card.paper !== true || card.orders !== OPERATOR_LOCK_ORDERS) {
     throw new Error('operator-lock card must stay paper-only with a null accountId');

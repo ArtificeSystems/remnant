@@ -44,9 +44,9 @@ This tree is the TypeScript implementation of Remnant Protocol, prepared for v1.
 - A2A and MCP transport adapters (no servers)
 - Node file inspection and audit helpers
 - Adversarial conformance battery (cases A–T) and CLI
-- **`eng-status` demo producer** — maps engineering status cards to Remnant envelopes without calling other products
-- **`operator-lock` demo producer** — writes one paper card (`accountId: null`, `orders: allowed-when-pinned`, `paper: true`) onto the same first-class fields. No trade wire
-- **Grail adapter boundary** — `createGrailAdapter()` exposes `put`, `resolveCurrent`, and `isSafeToAct` for a later Engine call. Function boundary only; no HTTP client
+- **`eng-status` demo producer** — maps status cards to Remnant envelopes for local handoff
+- **`operator-lock` demo producer** — writes one paper card (`accountId: null`, `orders: allowed-when-pinned`, `paper: true`) onto the same first-class fields
+- **Host adapter boundary** — `createHostAdapter()` exposes `put`, `resolveCurrent`, and `isSafeToAct` for a host runtime. Function boundary only; no HTTP client
 
 ### `current` vs `locked`
 
@@ -61,14 +61,14 @@ Eng-status cards and Remnant envelopes also carry first-class fields: `authority
 
 ## What this tree does not include
 
-- No Grail, Saylis, Oroboros, or Risk HTTP client or trade wire (the Grail adapter is a local function boundary only)
+- No HTTP client or external service wire-up (the host adapter is a local function boundary only)
 - No agent runner or agent mesh
 - No PKI, certificate authority, or identity network
 - No graph database or second store
 - No universal stale-after window (callers supply domain freshness policy)
 - No YAML in Core
 - No A2A or MCP server
-- No published package and no git tag until AJ publishes
+- No published package and no git tag until one is cut
 
 ## Use this tree
 

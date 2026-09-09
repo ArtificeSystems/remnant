@@ -189,7 +189,7 @@ describe('serialize/parse', () => {
       ],
       stop: ['Do not deploy'],
       evidence: [{ type: 'git-commit', uri: 'git:abc123', claim: 'HEAD at abc123' }],
-      extensions: { 'com.artifice.finance': { n: 1 } },
+      extensions: { 'com.acme.finance': { n: 1 } },
     });
     const json = serializeRemnant(remnant);
     const parsed = parseRemnant(json);
@@ -198,7 +198,7 @@ describe('serialize/parse', () => {
   });
 
   it('preserves unknown extension fields', () => {
-    const remnant = minimal({ extensions: { 'com.acme.cicd': { job: 9 }, 'com.artifice.finance': { x: true } } });
+    const remnant = minimal({ extensions: { 'com.acme.cicd': { job: 9 }, 'com.acme.finance': { x: true } } });
     const parsed = parseRemnant(serializeRemnant(remnant));
     assert.deepEqual(parsed.extensions, remnant.extensions);
   });
@@ -281,7 +281,7 @@ describe('render and redact', () => {
 describe('partial work', () => {
   it('allows partial status without claiming completeness', () => {
     const remnant = createRemnant({
-      producer: 'cursor.engineer',
+      producer: 'cursor.agent',
       goal: 'Add routing without changing existing behavior',
       status: 'partial',
       outputs: [fileOutput],
