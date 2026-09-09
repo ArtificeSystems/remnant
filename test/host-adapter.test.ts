@@ -2,12 +2,13 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { generateSigningKeyPair, signRemnant } from '../src/crypto/index.ts';
 import {
-  createGrailAdapter,
+  createHostAdapter,
   produceOperatorLock,
   writeOperatorLockCard,
 } from '../src/index.ts';
 
 const AS_OF = '2026-09-08T15:00:00.000Z';
+const OPERATOR_LOCK_EXTENSION = 'com.remnant.demo.operator-lock';
 
 function lockInput(overrides: Record<string, unknown> = {}) {
   return {
@@ -17,7 +18,7 @@ function lockInput(overrides: Record<string, unknown> = {}) {
     evidence: [{ type: 'operator-note', uri: 'note:pin-1' }],
     not_checked: ['live account binding', 'live order path'],
     lane: 'paper',
-    stop: ['Do not call Grail'],
+    stop: ['Do not act without host verification'],
     as_of: AS_OF,
     producer: 'cursor.agent',
     ...overrides,
@@ -36,7 +37,7 @@ describe('operator-lock producer', () => {
     assert.equal(card.lane, 'paper');
     assert.equal(card.as_of, AS_OF);
     assert.ok(card.stop.some((item) => /paper only/i.test(item)));
-    assert.ok(card.stop.includes('Do not call Grail'));
+    assert.ok(card.stop.includes('Do not act without host verification'));
   });
 
   it('maps first-class fields and keeps current distinct from locked', () => {
@@ -54,7 +55,7 @@ describe('operator-lock producer', () => {
     assert.equal(remnant.lane, card.lane);
     assert.deepEqual(remnant.stop, card.stop);
     assert.equal(remnant.asOf, card.as_of);
-    const lock = remnant.extensions?.['com.artifice.operator-lock'] as {
+    const lock = remnant.extensions?.[OPERATOR_LOCK_EXTENSION] as {
       accountId: null;
       orders: string;
       paper: boolean;
@@ -69,11 +70,11 @@ describe('operator-lock producer', () => {
   });
 });
 
-describe('Grail adapter boundary', () => {
+describe('host adapter boundary', () => {
   const keys = generateSigningKeyPair();
 
   it('puts and resolves the current store head', () => {
-    const adapter = createGrailAdapter();
+    const adapter = createHostAdapter();
     const { remnant } = produceOperatorLock(lockInput());
     adapter.put(remnant);
     assert.deepEqual(adapter.resolveCurrent(remnant.id), remnant);
@@ -82,7 +83,7 @@ describe('Grail adapter boundary', () => {
   });
 
   it('drops the previous head after supersede without treating locked as current', () => {
-    const adapter = createGrailAdapter();
+    const adapter = createHostAdapter();
     const goal = 'Paper operator lock pinned';
     const { remnant: pinned } = produceOperatorLock(lockInput({ goal, locked: true }));
     adapter.put(pinned);
@@ -103,7 +104,7 @@ describe('Grail adapter boundary', () => {
   });
 
   it('isSafeToAct stays false when as_of is missing', () => {
-    const adapter = createGrailAdapter();
+    const adapter = createHostAdapter();
     const { remnant } = produceOperatorLock(lockInput());
     delete (remnant as { asOf?: string }).asOf;
     const signed = signRemnant(remnant, keys.privateKey);
@@ -113,7 +114,7 @@ describe('Grail adapter boundary', () => {
   });
 
   it('does not apply a stale window unless the caller passes maxAge', () => {
-    const adapter = createGrailAdapter();
+    const adapter = createHostAdapter();
     const { remnant } = produceOperatorLock(lockInput({ as_of: '2020-01-01T00:00:00.000Z' }));
     adapter.put(remnant);
     const signed = signRemnant(remnant, keys.privateKey);

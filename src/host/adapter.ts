@@ -4,10 +4,10 @@ import { isSafeToAct, type SafeToActResult } from '../safe.js';
 import { createCurrentStore, type CurrentStore } from '../store.js';
 
 /**
- * Caller-supplied STOP options for the adapter.
+ * Caller-supplied STOP options for the host adapter.
  * `maxAge` is honored only when the caller passes it. There is no default stale window.
  */
-export interface GrailAdapterSafeToActOptions {
+export interface HostAdapterSafeToActOptions {
   publicKey?: string;
   now?: Date;
   /** Caller-supplied max age in ms for `asOf`. Omit to skip the age check. */
@@ -15,19 +15,18 @@ export interface GrailAdapterSafeToActOptions {
 }
 
 /**
- * Thin Grail-facing boundary the Engine could call later.
+ * Thin host-facing boundary a caller can bind to its runtime later.
  *
  * This is a function/module boundary, not a platform and not an HTTP client.
- * No trade wire. `current` means store head. `locked` stays on the artifact
- * and means authority authorized.
+ * `current` means store head. `locked` stays on the artifact and means authority authorized.
  */
-export interface GrailAdapter {
+export interface HostAdapter {
   put(artifact: Remnant): void;
   resolveCurrent(id: string): Remnant | undefined;
-  isSafeToAct(signed: SignedRemnant, options?: GrailAdapterSafeToActOptions): SafeToActResult;
+  isSafeToAct(signed: SignedRemnant, options?: HostAdapterSafeToActOptions): SafeToActResult;
 }
 
-export interface CreateGrailAdapterOptions {
+export interface CreateHostAdapterOptions {
   store?: CurrentStore;
 }
 
@@ -36,7 +35,7 @@ export interface CreateGrailAdapterOptions {
  * `isSafeToAct` stays false when `as_of` is missing. Optional `maxAge` is
  * forwarded only if the caller passes it.
  */
-export function createGrailAdapter(options: CreateGrailAdapterOptions = {}): GrailAdapter {
+export function createHostAdapter(options: CreateHostAdapterOptions = {}): HostAdapter {
   const store = options.store ?? createCurrentStore();
 
   return {

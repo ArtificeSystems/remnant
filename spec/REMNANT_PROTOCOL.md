@@ -829,7 +829,7 @@ producer: "cursor.sonnet"
 or:
 
 ```yaml
-producer: "artifice.grokbot/operator"
+producer: "host.agent/operator"
 ```
 
 The protocol does not require a universal agent identity ontology.
@@ -839,7 +839,7 @@ Rich metadata belongs in extensions if needed:
 ```json
 {
   "extensions": {
-    "com.artifice.producer": {
+    "com.example.producer": {
       "model": "...",
       "runtime": "...",
       "session": "...",
@@ -864,7 +864,7 @@ Examples:
 ```json
 {
   "extensions": {
-    "com.artifice.finance": {},
+    "com.acme.finance": {},
     "com.acme.cicd": {}
   }
 }
@@ -1637,7 +1637,7 @@ The canonical Remnant remains valid outside MCP.
 A compliant Remnant must remain usable by an agent that has:
 
 - no Remnant SDK,
-- no Artifice account,
+- no vendor account,
 - no network access,
 - no MCP,
 - no A2A,
@@ -1688,7 +1688,7 @@ Verification/effect evidence should prefer opaque references:
 
 ```yaml
 evidence:
-  - "vault:credential/artifice-prod"
+  - "vault:credential/prod"
 ```
 
 rather than embedding credentials.
@@ -1877,7 +1877,7 @@ Deliver:
 
 ### Phase 4 — Dogfood
 
-Require internal Artifice/Grokbot/engineering-agent handoffs to optionally emit v0.1 Remnants.
+Require internal agent handoffs to optionally emit v0.1 Remnants.
 
 Measure:
 
@@ -1911,20 +1911,20 @@ Only after Core survives dogfooding:
   "id": "art_code_001",
   "createdAt": "2026-09-08T15:00:00Z",
   "asOf": "2026-09-08T15:00:00Z",
-  "producer": "cursor.engineer",
-  "goal": "Add proprAccountId routing without changing existing Hyperliquid behavior.",
+  "producer": "cursor.agent",
+  "goal": "Fix authentication redirect bug without changing existing session behavior.",
   "status": "partial",
   "outputs": [
     {
       "kind": "file",
-      "path": "/repo/src/routes/ultra-fast-trade.ts",
+      "path": "/repo/src/auth/callback.ts",
       "mediaType": "text/typescript",
       "sha256": "abc..."
     }
   ],
   "assumptions": [],
   "unknowns": [
-    "POST /api/ultra-fast-trade integration test has not been rerun"
+    "Production SSO integration test has not been rerun"
   ],
   "verification": [
     {
@@ -1932,13 +1932,13 @@ Only after Core survives dogfooding:
       "method": "npm run build",
       "result": "pass",
       "evidence": ["exit_code:0"],
-      "doesNotProve": ["Propr routing reaches the correct backend account"]
+      "doesNotProve": ["Redirect reaches the correct callback URL in production"]
     }
   ],
   "stop": [
-    "Do not mark routing complete until the POST path is exercised"
+    "Do not mark routing complete until the SSO path is exercised"
   ],
-  "nextAction": "Run the POST integration test with a pinned test proprAccountId."
+  "nextAction": "Run the SSO integration test with a pinned test client id."
 }
 ```
 
@@ -2136,7 +2136,7 @@ Not yet. User/system authority can currently be represented through assumption b
 
 ### 62.6 Should dependencies/lineage become Core?
 
-Not beyond `supersedes` in v0.1. Rich lineage is compelling, especially for Artifice's trading factory, but it should not burden generic adoption before the need is demonstrated.
+Not beyond `supersedes` in v0.1. Rich lineage is compelling for some domains, but it should not burden generic adoption before the need is demonstrated.
 
 ### 62.7 Should verification use typed methods?
 

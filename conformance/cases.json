@@ -535,7 +535,7 @@
       "id": "art_p01",
       "createdAt": "2026-09-08T15:00:00.000Z",
       "asOf": "2026-09-08T15:00:00.000Z",
-      "producer": "artifice.grokbot/operator",
+      "producer": "host.agent/operator",
       "goal": "Close the user's open BTC position.",
       "status": "current",
       "outputs": [{ "kind": "data", "data": { "userId": "acct_other_person", "symbol": "BTC" } }],
