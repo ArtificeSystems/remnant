@@ -63,6 +63,10 @@ Pretty-printed `serializeRemnant()` is for humans. It is not the signed payload.
 
 The same Remnant value MUST produce identical canonical bytes on every runtime that implements this algorithm. A signature proves those bytes were signed by a holder of the key. It does not prove the claims inside are true.
 
+## Envelope status
+
+Lifecycle status is one of: `draft`, `partial`, `current`, `superseded`, `rejected`. There is no `locked` status. Use **`current`** when a Remnant is the active work product for its goal.
+
 ## Resolution
 
 `resolveCurrent(remnants)` classifies a set by explicit `supersedes` and `rejected`. Two `current` remnants conflict only when their `goal` strings are identical (`===`) and neither supersedes the other.

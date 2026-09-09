@@ -2,7 +2,7 @@
 ## Whitepaper, Design Document, and TypeScript Engineering Specification
 
 **Working package:** `@artifice/remnant`  
-**Protocol status:** Draft / v0.1 design target  
+**Protocol status:** v1.0  
 **License target:** Apache-2.0  
 **Primary implementation:** TypeScript  
 **Canonical serialization:** JSON  
@@ -409,6 +409,8 @@ Receivers should not use it as current state except for historical analysis.
 ### `rejected`
 
 The work product or decision has been explicitly rejected and must not be resurrected as the active path without new authority.
+
+There is **no** `locked` status. Use `current` when presenting the active work product for a goal. Informal prose such as “status locked” is not a valid enum value.
 
 ---
 
@@ -1234,34 +1236,30 @@ For example, a valid XLSX container can still contain wrong formulas.
 
 ---
 
-## 32. Remnant Audit API
+## 32. Remnant Audit API and machine STOP gate
 
-Do not expose a universal `isSafeToAct()`.
+`auditRemnant()` returns diagnostics; the caller decides whether an action is blocked.
 
-Instead:
+v1 also ships **`isSafeToAct()`** — a contextual machine STOP gate for **signed** Remnants. It is **not** a universal “safe for every action” boolean. Safety depends on the intended action; a Remnant may be sufficient to continue coding while insufficient to deploy.
+
+```ts
+export function isSafeToAct(
+  signed: SignedRemnant,
+  options?: { store?: CurrentStore; publicKey?: string; now?: Date; staleAfterMs?: number }
+): { safe: boolean; stop: string[] };
+```
+
+The gate returns `{ safe: false, stop: [...] }` unless `status` is `current`, the Ed25519 signature verifies, supersession is valid (when a store is supplied), required evidence is present, proof rules pass, and adversarial trap checks are clear. Callers interpret `stop` for their specific action.
+
+Do not treat `safe: true` as permission for actions outside the Remnant goal or receiver authority.
+
+For file-level diagnostics without the STOP gate:
 
 ```ts
 export async function auditRemnant(
   remnant: Remnant,
   options?: AuditOptions
 ): Promise<RemnantAudit>;
-```
-
-```ts
-export interface RemnantAudit {
-  diagnostics: RemnantDiagnostic[];
-  outputInspections?: Record<string, unknown>;
-}
-```
-
-Possible options:
-
-```ts
-export interface AuditOptions {
-  inspectFiles?: boolean;
-  verifyHashes?: boolean;
-  now?: Date;
-}
 ```
 
 The audit result says what is inconsistent or unverified. The caller decides whether that blocks its intended action.
@@ -1400,7 +1398,7 @@ remnant diff old.json new.json
 remnant adversarial run ./cases
 ```
 
-Avoid building store/query/graph commands in v0.1.
+Avoid building graph/query commands in Core. v1 ships a minimal **current store** (`put` / `resolveCurrent`) for one current Remnant per exact goal string — not a second graph database or universal registry.
 
 ---
 
@@ -1703,11 +1701,9 @@ Do not build a full DLP engine into Core.
 
 ## 48. Signing
 
-Cryptographic signing is intentionally deferred.
+v1 ships optional Ed25519 signing helpers (`signRemnant`, `verifyRemnantSignature`) over canonical Remnant bytes. There is no PKI, certificate authority, or identity network.
 
-Signatures may later help prove remnant origin and byte integrity, but they do not prove semantic correctness.
-
-The protocol should first establish useful semantics and real adoption before introducing key management requirements.
+Signatures prove byte integrity and possession of a key. They do not prove semantic correctness of claims inside the Remnant.
 
 ---
 

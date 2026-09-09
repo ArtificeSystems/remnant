@@ -1,6 +1,6 @@
 {
   "name": "@artifice/remnant",
-  "version": "0.2.1",
+  "version": "1.0.0",
   "description": "Remnant Protocol: durable, accountable agent work state.",
   "type": "module",
   "license": "Apache-2.0",
@@ -40,7 +40,9 @@
     "dist",
     "conformance",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md",
+    "RELEASE_NOTES.md"
   ],
   "scripts": {
     "build": "tsc",

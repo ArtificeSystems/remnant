@@ -42,4 +42,4 @@ Machine-readable cases: `conformance/cases.json`.
 
 The battery tests agent behavior against the Remnant plus inspectable world state. It is not a quiz about YAML.
 
-v0.1 ships the cases and scoring labels. It does not ship an LLM runner.
+v1 ships the cases and scoring labels. It does not ship an LLM runner or agent runtime.

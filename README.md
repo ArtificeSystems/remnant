@@ -27,7 +27,32 @@ Zero reread. Zero redo. No silent risk.
               next agent
 ```
 
-This package is the v0.2 TypeScript implementation. It is not an agent runtime, workflow engine, or memory system.
+This package is the **v1.0** TypeScript implementation of Remnant Protocol. It is a protocol library: create, validate, serialize, resolve, and audit Remnant envelopes. It is **not** an agent runtime, workflow engine, memory system, or LLM runner.
+
+## What v1 is
+
+- Typed Remnant creation, validation, serialization, and rendering
+- `resolveCurrent()` for supersession and conflict classification across a set of Remnants
+- In-process and file-backed **current store** (`put` / `resolveCurrent`) — one current Remnant per exact goal string
+- **`isSafeToAct()`** machine STOP gate for signed, current Remnants (contextual, not universal safety)
+- Proof fail-closed rules (`isProofEligible`, `resolveCurrentProof`)
+- Ed25519 signing helpers (optional; no PKI)
+- A2A and MCP transport adapters (no servers)
+- Node file inspection and audit helpers
+- Adversarial conformance battery (cases A–T) and CLI
+- **`eng-status` demo producer** — maps engineering status cards to Remnant envelopes without calling other products
+
+Envelope lifecycle status is one of: `draft` | `partial` | `current` | `superseded` | `rejected`. There is **no** `locked` status. Use `current` when presenting the active work product for a goal.
+
+## What is not in v1
+
+- No Grail, Saylis, Oroboros, or Risk wire-up
+- No agent runner or agent mesh
+- No PKI, certificate authority, or identity network
+- No graph database or second store
+- No universal stale-after window (callers supply domain freshness policy)
+- No YAML in Core
+- No A2A or MCP server
 
 ## Install
 
@@ -87,6 +112,8 @@ A signature, CI receipt, SLSA attestation, or ZK proof can all be evidence. Core
 
 ## Resolve currentness
 
+Classify a set of Remnants:
+
 ```ts
 import { resolveCurrent } from '@artifice/remnant';
 
@@ -94,6 +121,45 @@ const { current, superseded, rejected, conflicts } = resolveCurrent(remnants);
 ```
 
 If two Remnants both claim `current` and their `goal` strings are identical (`===`) and neither supersedes the other, they are a conflict. `"Fix login"` and `"Repair authentication"` do not conflict. Core does not fuzzy-match goals. Presentation quality does not break the tie.
+
+## Current store
+
+Track one current Remnant per exact goal string in-process or on disk:
+
+```ts
+import { createCurrentStore, produceEngStatus } from '@artifice/remnant';
+
+const store = createCurrentStore(); // or createCurrentStore({ path: './current.json' })
+const { remnant } = produceEngStatus({
+  status: 'current',
+  authority: 'eng-lead@example.com',
+  claim: 'Router patch ready for staging',
+  evidence: [{ type: 'ci', uri: 'https://ci.example/runs/9' }],
+  not_checked: ['Production SSO path'],
+  lane: 'platform',
+  stop: ['Do not deploy to production'],
+  producer: 'cursor.agent',
+});
+
+store.put(remnant);
+store.resolveCurrent(remnant.id); // → remnant
+store.resolveCurrent('older-id'); // → undefined when superseded or not current
+```
+
+A new `current` for an existing goal requires explicit `supersedes`.
+
+## Machine STOP gate
+
+`isSafeToAct()` returns `{ safe, stop }` for a **signed** Remnant. It is a contextual gate, not a universal “safe for everything” boolean. It requires `status: 'current'`, valid signature, required evidence, valid supersession (when a store is supplied), and passes adversarial trap checks.
+
+```ts
+import { generateSigningKeyPair, signRemnant } from '@artifice/remnant/crypto';
+import { isSafeToAct } from '@artifice/remnant';
+
+const keys = generateSigningKeyPair();
+const signed = signRemnant(remnant, keys.privateKey);
+isSafeToAct(signed, { publicKey: keys.publicKey, store });
+```
 
 ## A2A / MCP
 
@@ -159,11 +225,7 @@ remnant render remnant.json
 remnant conformance
 ```
 
-## What this package is not
-
-No YAML. No store. No graph database. No LLM runner. No `isSafeToAct()`. No certificate authority. No workflow engine.
-
-See `spec/` for the protocol, behavioral contract, and adversarial battery.
+See `spec/` for the protocol, behavioral contract, and adversarial battery. See `CHANGELOG.md` and `RELEASE_NOTES.md` for the v1.0 release.
 
 ## License
 

@@ -228,6 +228,43 @@ describe('eng-status producer', () => {
     assert.equal(remnant.status, 'current');
     assert.ok(remnant.extensions?.['com.artifice.eng-status']);
   });
+
+  it('put and resolveCurrent via eng-status producer — older id is not current after supersede', () => {
+    const store = createCurrentStore();
+    const goal = 'Router patch ready for staging';
+
+    const { remnant: older } = produceEngStatus({
+      status: 'current',
+      authority: 'eng-lead@example.com',
+      claim: goal,
+      evidence: [{ type: 'git-commit', uri: 'git:abc123' }],
+      not_checked: ['Production SSO path'],
+      lane: 'platform',
+      stop: ['Do not deploy to production'],
+      producer: 'cursor.agent',
+      goal,
+    });
+    store.put(older);
+    assert.deepEqual(store.resolveCurrent(older.id), older);
+
+    const { remnant: newer } = produceEngStatus({
+      status: 'current',
+      supersedes: [older.id],
+      authority: 'eng-lead@example.com',
+      claim: goal,
+      evidence: [{ type: 'ci', uri: 'https://ci.example/runs/10' }],
+      not_checked: [],
+      lane: 'platform',
+      stop: [],
+      producer: 'cursor.agent',
+      goal,
+    });
+    store.put(newer);
+    assert.deepEqual(store.resolveCurrent(newer.id), newer);
+    assert.equal(store.resolveCurrent(older.id), undefined);
+    assert.equal(older.status, 'current');
+    assert.equal(newer.status, 'current');
+  });
 });
 
 describe('conformance scorer exit behavior', () => {
