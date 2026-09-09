@@ -2,41 +2,45 @@
 
 Durable work-state for agent handoffs.
 
-> **A Remnant is an accountable unit of completed or partial work that another agent can safely inspect and continue from without reconstructing the conversation that produced it.**
+> **A Remnant is an accountable unit of completed or partial work that another agent can inspect and continue from without reconstructing the conversation that produced it.**
 
-Zero reread. Zero redo. No silent risk.
+A later worker can inspect this without rereading the chat. It still has to verify before it acts.
+
+Signing is optional to create and required to act. An unsigned Remnant is not safe to act.
+
+This tree is prepared for v1. It is not a published release until a tag exists.
 
 ```text
                 REMNANT
       durable accountable work state
-                    │
-       ┌────────────┼────────────┐
-       │            │            │
+                    |
+       +------------+------------+
+       |            |            |
       A2A          MCP       plain JSON
-       │            │            │
-       └────────────┼────────────┘
-                    │
+       |            |            |
+       +------------+------------+
+                    |
               verification
-                    │
-              optional signing
-                    │
+                    |
+         signing (required to act)
+                    |
               supersession
-                    │
+                    |
              resolution/conflict
-                    │
+                    |
               next agent
 ```
 
-This package is the **v1.0** TypeScript implementation of Remnant Protocol. It is a protocol library: create, validate, serialize, resolve, and audit Remnant envelopes. It is **not** an agent runtime, workflow engine, memory system, or LLM runner.
+This tree is the TypeScript implementation of Remnant Protocol, prepared for v1. It is a protocol library: create, validate, serialize, resolve, and audit Remnant envelopes. It is **not** an agent runtime, workflow engine, memory system, or LLM runner. It does not make a later worker safe by existing. The worker must call `isSafeToAct` and read recorded `effects` before it acts.
 
-## What v1 is
+## What this tree includes
 
 - Typed Remnant creation, validation, serialization, and rendering
 - `resolveCurrent()` for supersession and conflict classification across a set of Remnants
 - In-process and file-backed **current store** (`put` / `resolveCurrent`) — one current Remnant per exact goal string
 - **`isSafeToAct()`** machine STOP gate for signed, current Remnants (contextual, not universal safety)
 - Proof fail-closed rules (`isProofEligible`, `resolveCurrentProof`)
-- Ed25519 signing helpers (optional; no PKI)
+- Ed25519 signing helpers (optional to create; no PKI)
 - A2A and MCP transport adapters (no servers)
 - Node file inspection and audit helpers
 - Adversarial conformance battery (cases A–T) and CLI
@@ -55,7 +59,7 @@ Envelope lifecycle status remains: `draft` | `partial` | `current` | `superseded
 
 Eng-status cards and Remnant envelopes also carry first-class fields: `authority`, `not_checked` / `notChecked`, `lane`, `stop`, and `as_of` (maps to Remnant `asOf`).
 
-## What is not in v1
+## What this tree does not include
 
 - No Grail, Saylis, Oroboros, or Risk HTTP client or trade wire (the Grail adapter is a local function boundary only)
 - No agent runner or agent mesh
@@ -64,16 +68,19 @@ Eng-status cards and Remnant envelopes also carry first-class fields: `authority
 - No universal stale-after window (callers supply domain freshness policy)
 - No YAML in Core
 - No A2A or MCP server
+- No published package and no git tag until AJ publishes
 
-## Install
+## Use this tree
+
+Not published. Do not install `@artifice/remnant` from the registry until a tag exists.
 
 ```bash
-npm install @artifice/remnant
+npm ci
 ```
 
 Node.js 20+. ESM.
 
-Subpath exports:
+Subpath exports from this tree:
 
 ```text
 @artifice/remnant
@@ -86,6 +93,8 @@ Subpath exports:
 
 ## Create
 
+The first snippet is unsigned and `status: current`. That is inspectable. It is not deployable. Unsigned is not safe to act. `isSafeToAct` requires a signature, as_of, and evidence.
+
 ```ts
 import { createRemnant, serializeRemnant } from '@artifice/remnant';
 
@@ -93,10 +102,10 @@ const remnant = createRemnant({
   producer: 'cursor.sonnet',
   goal: 'Fix authentication redirect bug',
   status: 'current',
-  outputs: [{ kind: 'text', text: 'Implementation completed.' }],
+  outputs: [{ kind: 'text', text: 'Patch written. Not verified.' }],
   unknowns: ['Production SSO has not been exercised'],
-  stop: ['Do not deploy to production without explicit approval'],
-  nextAction: 'Deploy to staging and exercise the SSO callback.',
+  stop: ['Unsigned current is not safe to act'],
+  nextAction: 'Sign, attach evidence, then call isSafeToAct before any deploy.',
 });
 
 process.stdout.write(serializeRemnant(remnant));
@@ -104,9 +113,13 @@ process.stdout.write(serializeRemnant(remnant));
 
 `status` defaults to `draft`. The SDK will not silently default to `current`.
 
-Mechanical fields (`protocolVersion`, `id`, `createdAt`, `asOf`) are generated.
+Mechanical fields (`protocolVersion`, `id`, `createdAt`, `asOf`) are generated. Pass `asOf` when the worker knows the observation time. A missing `as_of` fails `isSafeToAct`.
 
 Assumption shorthand `'DATABASE_URL is configured'` becomes `{ statement, basis: 'unknown' }`.
+
+## Effects
+
+`effects` is the first-class record of side effects already attempted or completed (`planned` | `attempted` | `completed` | `failed`). Resume must read recorded `effects`, not infer the order did not happen.
 
 ## Evidence
 
@@ -120,6 +133,23 @@ evidence: [
 ```
 
 A signature, CI receipt, SLSA attestation, or ZK proof can all be evidence. Core does not understand those systems.
+
+## Proof fail-closed
+
+A completed effect with no evidence is not proof. `isProofEligible` is false when a proof-like completed `effects` entry has no evidence. `isSafeToAct` also stops when any completed effect lacks evidence.
+
+```ts
+import { createRemnant, isProofEligible } from '@artifice/remnant';
+
+const claimed = createRemnant({
+  producer: 'worker',
+  goal: 'Place paper lock',
+  status: 'current',
+  outputs: [{ kind: 'text', text: 'Lock written.' }],
+  effects: [{ action: 'record paper lock proof', status: 'completed' }],
+});
+isProofEligible(claimed); // false
+```
 
 ## Resolve currentness
 
@@ -155,17 +185,17 @@ const { card, remnant } = produceEngStatus({
 });
 
 store.put(remnant);
-store.resolveCurrent(remnant.id); // → remnant (latest for goal)
-card.locked; // → true (authority authorized)
+store.resolveCurrent(remnant.id); // latest for that exact goal
+card.locked; // true when authority authorized
 ```
 
-A new `current` for an existing goal requires explicit `supersedes`.
+A new `current` for an existing goal requires explicit `supersedes`. Putting a card in the store does not make it safe to act. Call `isSafeToAct` on a signed envelope.
 
 ## Machine STOP gate
 
-`isSafeToAct()` returns `{ safe, stop }` for a **signed** Remnant. It is a contextual gate, not a universal “safe for everything” boolean. It requires `status: 'current'`, a present **`as_of`** (`asOf`), valid signature, required evidence, valid supersession (when a store is supplied), and passes adversarial trap checks.
+`isSafeToAct()` returns `{ safe, stop }` for a **signed** Remnant. It is a contextual gate, not a universal safe-for-everything boolean. It requires `status: current`, a present `as_of` (`asOf`), a valid signature, required evidence, valid supersession when a store is supplied, and it passes adversarial trap checks. Signing is optional to create and required to act.
 
-Pass optional **`maxAge`** (milliseconds) to stop when `asOf` is older than the caller-supplied window. There is **no default** stale window.
+Pass optional `maxAge` (milliseconds) to stop when `asOf` is older than the caller-supplied window. There is no default stale window.
 
 ```ts
 import { generateSigningKeyPair, signRemnant } from '@artifice/remnant/crypto';
@@ -209,7 +239,7 @@ remnant conformance --case AP-A01
 remnant conformance --input results.json
 ```
 
-The package ships fixtures A–T plus a scorer. It does not run an LLM.
+The package ships fixtures A-T plus a scorer. It does not run an LLM.
 
 `results.json`:
 
@@ -240,7 +270,7 @@ remnant render remnant.json
 remnant conformance
 ```
 
-See `spec/` for the protocol, behavioral contract, and adversarial battery. See `CHANGELOG.md` and `RELEASE_NOTES.md` for the v1.0 release.
+See `spec/` for the protocol, behavioral contract, and adversarial battery. See `CHANGELOG.md` and `RELEASE_NOTES.md` for notes prepared alongside this tree. No tag is published.
 
 ## License
 
