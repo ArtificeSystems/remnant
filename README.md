@@ -8,7 +8,7 @@ A later worker can inspect this without rereading the chat. It still has to veri
 
 Signing is optional to create and required to act. An unsigned Remnant is not safe to act.
 
-This tree is prepared for v1. It is not a published release until a tag exists.
+**[v1.0.0](https://github.com/ArtificeSystems/remnant/releases/tag/v1.0.0)** is a tagged GitHub release. This tree (main) is that release plus the PolyForm Noncommercial 1.0.0 license change after the tag. The package is not published to npm.
 
 ```text
                 REMNANT
@@ -31,7 +31,7 @@ This tree is prepared for v1. It is not a published release until a tag exists.
               next agent
 ```
 
-This tree is the TypeScript implementation of Remnant Protocol, prepared for v1. It is a protocol library: create, validate, serialize, resolve, and audit Remnant envelopes. It is **not** an agent runtime, workflow engine, memory system, or LLM runner. It does not make a later worker safe by existing. The worker must call `isSafeToAct` and read recorded `effects` before it acts.
+This tree is the TypeScript implementation of Remnant Protocol. It is a protocol library: create, validate, serialize, resolve, and audit Remnant envelopes. It is **not** an agent runtime, workflow engine, memory system, or LLM runner. It does not make a later worker safe by existing. The worker must call `isSafeToAct` and read recorded `effects` before it acts.
 
 ## What this tree includes
 
@@ -68,11 +68,10 @@ Eng-status cards and Remnant envelopes also carry first-class fields: `authority
 - No universal stale-after window (callers supply domain freshness policy)
 - No YAML in Core
 - No A2A or MCP server
-- No published package and no git tag until one is cut
 
 ## Use this tree
 
-Not published. Do not install `@artifice/remnant` from the registry until a tag exists.
+Not published to npm. Install from the git repository or a local checkout, not the registry.
 
 ```bash
 npm ci
@@ -270,7 +269,7 @@ remnant render remnant.json
 remnant conformance
 ```
 
-See `spec/` for the protocol, behavioral contract, and adversarial battery. See `CHANGELOG.md` and `RELEASE_NOTES.md` for notes prepared alongside this tree. No tag is published.
+See `spec/` for the protocol, behavioral contract, and adversarial battery. See `CHANGELOG.md` and `RELEASE_NOTES.md` for notes prepared alongside this tree.
 
 ## License
 
