@@ -14,7 +14,7 @@ export interface RemnantAudit {
 }
 
 /**
- * Semantic audit only. File inspection lives in `@artifice/remnant/node`.
+ * Semantic audit only. File inspection lives in `@artificesystems/remnant/node`.
  * `inspectFiles` / `verifyHashes` are ignored here so Core stays isomorphic.
  */
 export function auditRemnant(remnant: Remnant, _options: AuditOptions = {}): RemnantAudit {

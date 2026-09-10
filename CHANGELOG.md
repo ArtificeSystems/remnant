@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to `@artifice/remnant` are documented here.
+All notable changes to `@artificesystems/remnant` are documented here.
 
 ## [Unreleased]
 
