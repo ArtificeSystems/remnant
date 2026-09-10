@@ -1,4 +1,4 @@
-# @artifice/remnant
+# @artificesystems/remnant
 
 Durable work-state for agent handoffs.
 
@@ -82,12 +82,12 @@ Node.js 20+. ESM.
 Subpath exports from this tree:
 
 ```text
-@artifice/remnant
-@artifice/remnant/node
-@artifice/remnant/a2a
-@artifice/remnant/mcp
-@artifice/remnant/crypto
-@artifice/remnant/conformance
+@artificesystems/remnant
+@artificesystems/remnant/node
+@artificesystems/remnant/a2a
+@artificesystems/remnant/mcp
+@artificesystems/remnant/crypto
+@artificesystems/remnant/conformance
 ```
 
 ## Create
@@ -95,7 +95,7 @@ Subpath exports from this tree:
 The first snippet is unsigned and `status: current`. That is inspectable. It is not deployable. Unsigned is not safe to act. `isSafeToAct` requires a signature, as_of, and evidence.
 
 ```ts
-import { createRemnant, serializeRemnant } from '@artifice/remnant';
+import { createRemnant, serializeRemnant } from '@artificesystems/remnant';
 
 const remnant = createRemnant({
   producer: 'cursor.sonnet',
@@ -138,7 +138,7 @@ A signature, CI receipt, SLSA attestation, or ZK proof can all be evidence. Core
 A completed effect with no evidence is not proof. `isProofEligible` is false when a proof-like completed `effects` entry has no evidence. `isSafeToAct` also stops when any completed effect lacks evidence.
 
 ```ts
-import { createRemnant, isProofEligible } from '@artifice/remnant';
+import { createRemnant, isProofEligible } from '@artificesystems/remnant';
 
 const claimed = createRemnant({
   producer: 'worker',
@@ -155,7 +155,7 @@ isProofEligible(claimed); // false
 Classify a set of Remnants:
 
 ```ts
-import { resolveCurrent } from '@artifice/remnant';
+import { resolveCurrent } from '@artificesystems/remnant';
 
 const { current, superseded, rejected, conflicts } = resolveCurrent(remnants);
 ```
@@ -167,7 +167,7 @@ If two Remnants both claim `current` and their `goal` strings are identical (`==
 Track one current Remnant per exact goal string in-process or on disk:
 
 ```ts
-import { createCurrentStore, produceEngStatus } from '@artifice/remnant';
+import { createCurrentStore, produceEngStatus } from '@artificesystems/remnant';
 
 const store = createCurrentStore(); // or createCurrentStore({ path: './current.json' })
 const { card, remnant } = produceEngStatus({
@@ -197,8 +197,8 @@ A new `current` for an existing goal requires explicit `supersedes`. Putting a c
 Pass optional `maxAge` (milliseconds) to stop when `asOf` is older than the caller-supplied window. There is no default stale window.
 
 ```ts
-import { generateSigningKeyPair, signRemnant } from '@artifice/remnant/crypto';
-import { isSafeToAct } from '@artifice/remnant';
+import { generateSigningKeyPair, signRemnant } from '@artificesystems/remnant/crypto';
+import { isSafeToAct } from '@artificesystems/remnant';
 
 const keys = generateSigningKeyPair();
 const signed = signRemnant(remnant, keys.privateKey);
@@ -210,8 +210,8 @@ isSafeToAct(signed, { publicKey: keys.publicKey, store, maxAge: 60 * 60 * 1000 }
 Remnant is a semantic layer. Transport stays A2A, MCP, or a JSON file.
 
 ```ts
-import { toA2AArtifact, fromA2AArtifact } from '@artifice/remnant/a2a';
-import { toMcpResource, toMcpStructuredContent, fromMcpStructuredContent } from '@artifice/remnant/mcp';
+import { toA2AArtifact, fromA2AArtifact } from '@artificesystems/remnant/a2a';
+import { toMcpResource, toMcpStructuredContent, fromMcpStructuredContent } from '@artificesystems/remnant/mcp';
 ```
 
 No A2A or MCP server is included.
@@ -221,7 +221,7 @@ No A2A or MCP server is included.
 Ed25519 over compact canonical Remnant JSON (`JSON.stringify(canonicalizeRemnant(remnant))`). The `SignedRemnant` wrapper is not part of the signed bytes. Pretty-printed `serializeRemnant()` is not the signed payload.
 
 ```ts
-import { generateSigningKeyPair, signRemnant, verifyRemnantSignature } from '@artifice/remnant/crypto';
+import { generateSigningKeyPair, signRemnant, verifyRemnantSignature } from '@artificesystems/remnant/crypto';
 
 const keys = generateSigningKeyPair();
 const signed = signRemnant(remnant, keys.privateKey);
@@ -254,7 +254,7 @@ The package ships fixtures A-T plus a scorer. It does not run an LLM.
 ## File inspection (Node)
 
 ```ts
-import { inspectFileOutput, auditRemnant } from '@artifice/remnant/node';
+import { inspectFileOutput, auditRemnant } from '@artificesystems/remnant/node';
 ```
 
 Local `FileOutput.path` must be absolute. A matching hash is not proof the work inside the file is correct.

@@ -1,6 +1,6 @@
 # Remnant v1 release notes
 
-**Package:** `@artifice/remnant`  
+**Package:** `@artificesystems/remnant`  
 **Status:** prepared for v1; not published until a tag exists
 
 ## Honest v1 claim

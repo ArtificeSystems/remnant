@@ -1,7 +1,7 @@
 # Remnant Protocol
 ## Whitepaper, Design Document, and TypeScript Engineering Specification
 
-**Working package:** `@artifice/remnant`  
+**Working package:** `@artificesystems/remnant`  
 **Protocol status:** v1.0  
 **License target:** Apache-2.0  
 **Primary implementation:** TypeScript  
@@ -997,7 +997,7 @@ This is how the protocol avoids both `LEAK` and `OVERFIT` behavior.
 Primary package:
 
 ```text
-@artifice/remnant
+@artificesystems/remnant
 ```
 
 Optional CLI binary:
@@ -1013,16 +1013,16 @@ Avoid premature package fragmentation.
 Suggested exports:
 
 ```text
-@artifice/remnant
-@artifice/remnant/node
-@artifice/remnant/cli   // internal entry used by bin
+@artificesystems/remnant
+@artificesystems/remnant/node
+@artificesystems/remnant/cli   // internal entry used by bin
 ```
 
 Possible future integrations MAY become separate packages only after real demand:
 
 ```text
-@artifice/remnant-a2a
-@artifice/remnant-mcp
+@artificesystems/remnant-a2a
+@artificesystems/remnant-mcp
 ```
 
 ---
@@ -1034,7 +1034,7 @@ Possible future integrations MAY become separate packages only after real demand
 - ESM-first
 - CJS compatibility only if cheap and required by users
 - Core types/validation SHOULD avoid Node-only APIs
-- File inspection/hash helpers live under `@artifice/remnant/node`
+- File inspection/hash helpers live under `@artificesystems/remnant/node`
 
 The package must be usable by agents that never use the CLI.
 
@@ -1069,7 +1069,7 @@ YAML support belongs in CLI tooling if included.
 ### 28.1 Creation
 
 ```ts
-import { createRemnant } from '@artifice/remnant';
+import { createRemnant } from '@artificesystems/remnant';
 
 const remnant = createRemnant({
   producer: 'cursor.sonnet',
@@ -1134,7 +1134,7 @@ The SDK must not silently default to `current`.
 ## 29. Validation API
 
 ```ts
-import { parseRemnant, validateRemnant } from '@artifice/remnant';
+import { parseRemnant, validateRemnant } from '@artificesystems/remnant';
 
 const remnant = parseRemnant(json);
 
@@ -1199,7 +1199,7 @@ The exact diagnostic severity should be tuned through the conformance battery ra
 import {
   inspectFileOutput,
   verifyFileHash
-} from '@artifice/remnant/node';
+} from '@artificesystems/remnant/node';
 ```
 
 ### `inspectFileOutput`
@@ -1609,7 +1609,7 @@ A2A Remnant
   metadata/ext → Remnant Protocol state/evidence semantics
 ```
 
-Do not make A2A a hard dependency of `@artifice/remnant`.
+Do not make A2A a hard dependency of `@artificesystems/remnant`.
 
 ---
 
