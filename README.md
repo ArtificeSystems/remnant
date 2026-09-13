@@ -8,7 +8,7 @@ A later worker can inspect this without rereading the chat. It still has to veri
 
 Signing is optional to create and required to act. An unsigned Remnant is not safe to act.
 
-**[v1.0.0](https://github.com/ArtificeSystems/remnant/releases/tag/v1.0.0)** is a tagged GitHub release. This tree (main) is that release plus the PolyForm Noncommercial 1.0.0 license change after the tag. The package is not published to npm.
+**[v1.0.1](https://github.com/ArtificeSystems/remnant/releases/tag/v1.0.1)** is available on npm as `@artificesystems/remnant`.
 
 ```text
                 REMNANT
@@ -69,12 +69,10 @@ Eng-status cards and Remnant envelopes also carry first-class fields: `authority
 - No YAML in Core
 - No A2A or MCP server
 
-## Use this tree
-
-Not published to npm. Install from the git repository or a local checkout, not the registry.
+## Install
 
 ```bash
-npm ci
+npm install @artificesystems/remnant
 ```
 
 Node.js 20+. ESM.
