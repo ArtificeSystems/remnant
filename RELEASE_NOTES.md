@@ -1,7 +1,17 @@
-# Remnant v1 release notes
+# Remnant v1.0.1 release notes
 
 **Package:** `@artificesystems/remnant`  
-**Status:** prepared for v1; not published until a tag exists
+**Status:** Published to npm at version 1.0.1  
+**License:** PolyForm Noncommercial 1.0.0
+
+## What's new in v1.0.1
+
+This release prepares Remnant for public npm distribution:
+
+- **npm publish**: Package is now available on npm as `@artificesystems/remnant@1.0.1`
+- **LICENSE update**: Added proper Required Notice line per PolyForm requirements
+- **README update**: Changed install instructions from git-only to npm install
+- **package.json metadata**: Added repository, bugs, homepage fields and prepublishOnly script
 
 ## Honest v1 claim
 

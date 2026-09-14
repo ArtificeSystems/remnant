@@ -4,9 +4,15 @@ All notable changes to `@artificesystems/remnant` are documented here.
 
 ## [Unreleased]
 
-## [1.0.1] - 2026-09-09
+## [1.0.1] - 2026-09-13
 
-Package version bump for PolyForm Noncommercial tagged release. Source/GitHub only.
+### Changed
+
+- **Public npm publish preparation**: Package is now published to npm as `@artificesystems/remnant@1.0.1`
+- Updated LICENSE with proper Required Notice: `Copyright 2026 Artifice Systems (https://artifice.systems)`
+- Updated README to include npm install instructions and remove git-only install framing
+- Added repository, bugs, and homepage fields to package.json
+- Added prepublishOnly script to ensure build and tests run before publishing
 
 ## [1.0.0] — 2026-09-09
 

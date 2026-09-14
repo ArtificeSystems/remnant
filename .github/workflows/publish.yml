@@ -32,4 +32,8 @@ jobs:
       - name: Publish @artificesystems/remnant
         run: npm publish --access public
         env:
+<<<<<<< HEAD
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+=======
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+>>>>>>> @{u}
