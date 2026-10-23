@@ -1,58 +1,51 @@
-# Remnant v1.0.1 release notes
+# Remnant v2.0.0 release notes
 
 **Package:** `@artificesystems/remnant`  
-**Status:** Published to npm at version 1.0.1  
+**Status:** Published to npm via the `v2.0.0` tag (CI publish workflow)  
 **License:** PolyForm Noncommercial 1.0.0
 
-## What's new in v1.0.1
+## Summary
 
-This release prepares Remnant for public npm distribution:
+v2.0.0 is a **security-focused major release**. It hardens `isSafeToAct()`, the current store, schema validation, CLI file inspection, and CI workflows. The breaking change is intentional: **callers must supply trusted signing keys**, and **store-backed STOP checks require the signed Remnant to match the store head**.
 
-- **npm publish**: Package is now available on npm as `@artificesystems/remnant@1.0.1`
-- **LICENSE update**: Added proper Required Notice line per PolyForm requirements
-- **README update**: Changed install instructions from git-only to npm install
-- **package.json metadata**: Added repository, bugs, homepage fields and prepublishOnly script
+## Security fixes
 
-## Honest v1 claim
+| Area | Behavior |
+|---|---|
+| `isSafeToAct()` | Requires `publicKey` or `trustedPublicKeys`; fails closed when missing |
+| Store + STOP | With `store`, resolved current must match signed Remnant bytes |
+| `put()` | Rejects id reuse with different content |
+| Schemas | Strict parsing; unknown fields fail validation |
+| `asOf` | Rejects future timestamps beyond `clockSkewMs` (default 60s) |
+| Store internals | Null-prototype `Map` storage (prototype pollution safe) |
+| `FileCurrentStore` | Validate before mutate; atomic file writes |
+| `extensions` | Default depth/key/size limits (`DEFAULT_EXTENSION_*` exports) |
+| CLI | File-root jail for `inspect` / `verify-files`; clean one-line errors |
+| CI | Valid tag publish workflow; PR/main test workflow |
 
-Remnant v1 is a **protocol library** for durable, accountable agent work state: create and validate Remnant JSON envelopes, classify currentness and conflicts, optionally sign with Ed25519, audit file outputs, and score adversarial conformance cases. v1 adds a lightweight current store (`put` / `resolveCurrent`), a contextual machine STOP gate (`isSafeToAct`), proof fail-closed rules, and demo producers (`eng-status`, `operator-lock`) — all without shipping an agent runtime, LLM runner, PKI, second store, universal stale window, or external service integrations.
+## Migrating from 1.x
 
-## Envelope status and authorization
+1. **Trusted keys** — Always pass `publicKey` or `trustedPublicKeys` to `isSafeToAct()` (and host adapter). Listing the embedded signature public key in `trustedPublicKeys` is the usual pattern.
+2. **Store binding** — If you pass `store`, put the Remnant first and expect STOP when an attacker presents a signed copy that is not the store’s current head.
+3. **Strict JSON** — Strip or reject unknown fields before signing; validation no longer preserves attacker-controlled extra properties.
+4. **Clock skew** — Future `asOf` beyond ~60s is not safe; set `clockSkewMs` if needed.
+5. **CLI paths** — Use `--file-root` to confine file inspection; defaults to the current working directory.
+6. **`staleAfterMs`** — Still accepted as a deprecated alias for `maxAge`.
 
-Lifecycle status values are: `draft`, `partial`, `current`, `superseded`, `rejected`.
-
-- **`status: current`** — this Remnant is the active work product for its goal; the current store resolves the latest id per goal.
-- **`locked: true`** — first-class boolean: authority has authorized this artifact. This is not a lifecycle status value.
-
-First-class fields on eng-status cards and Remnant envelopes: `authority`, `not_checked`, `lane`, `stop`, `as_of` (Remnant wire field `asOf`).
-
-## Shipped in v1 (since v0.2.0)
+## Shipped API (unchanged surface, stricter semantics)
 
 | Area | API |
 |---|---|
 | Current store | `createCurrentStore()`, `InMemoryCurrentStore`, `FileCurrentStore`, `put`, `resolveCurrent` |
-| STOP gate | `isSafeToAct(signed, { publicKey, store?, maxAge? })` |
+| STOP gate | `isSafeToAct(signed, { publicKey \| trustedPublicKeys, store?, maxAge?, clockSkewMs? })` |
 | Proof rules | `isProofEligible`, `proofDiagnostics`, `resolveCurrentProof` |
-| Demo producers | `produceEngStatus`, `writeEngStatusCard`, `engStatusToRemnant`, `produceOperatorLock` |
-| Host adapter | `createHostAdapter()` — `put`, `resolveCurrent`, `isSafeToAct` |
-| Existing v0.2 surface | `createRemnant`, `resolveCurrent`, signing, A2A/MCP adapters, Node audit, conformance CLI |
-
-## Explicitly not in v1
-
-- Agent runner or agent mesh
-- PKI / certificate authority
-- Graph database or second store
-- Universal stale-after duration (callers supply domain policy via `maxAge` only inside `isSafeToAct`, not protocol-wide)
-- HTTP client or external service wire-up
-- Git tag or published package from this tree
+| Demo producers | `produceEngStatus`, `produceOperatorLock`, host adapter |
+| Package exports | `types`, `import`, `require`, `default` per subpath |
 
 ## Tests
 
-Full suite covers store persistence, supersession, `isSafeToAct` STOP on adversarial cases, proof fail-closed, demo producers, and all v0.2 tests.
+`test/security-audit.test.ts` adds coverage for each security fix. The full suite must pass before publish.
 
-## Upgrade from v0.2.0
+## Explicitly not in this release
 
-1. Use this tree from source until a tag exists; do not install from the registry yet.
-2. Replace any doc or code assuming “no store” — use `createCurrentStore()` when tracking current artifacts by goal.
-3. Replace any assumption that `isSafeToAct` is absent — it requires a signed Remnant and returns `{ safe, stop }`.
-4. Use `status: 'current'` for the store head; set `locked: true` when authority has authorized the artifact. Pass explicit `as_of` on status cards.
+- No agent runner, PKI, or universal stale window beyond caller-supplied `maxAge`

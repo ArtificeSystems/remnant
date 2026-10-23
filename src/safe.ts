@@ -2,15 +2,28 @@ import type { SignedRemnant } from './crypto/index.js';
 import { verifyRemnantSignature } from './crypto/index.js';
 import type { Remnant } from './remnant.js';
 import { isProofEligible, proofDiagnostics } from './proof.js';
+import { remnantsEqual } from './remnant-equality.js';
 import type { CurrentStore } from './store.js';
 import { isIsoTimestamp, validateRemnant } from './schema.js';
 
+/** Default clock-skew allowance when rejecting future `asOf` timestamps. */
+export const DEFAULT_CLOCK_SKEW_MS = 60_000;
+
 export interface SafeToActOptions {
   store?: CurrentStore;
+  /** Trusted Ed25519 public key (SPKI DER, base64). Required unless `trustedPublicKeys` is set. */
   publicKey?: string;
+  /** Trusted signing keys. Required unless `publicKey` is set. */
+  trustedPublicKeys?: string[];
   now?: Date;
   /** Caller-supplied max age in ms for `asOf`. No default; omit to skip age check. */
   maxAge?: number;
+  /**
+   * @deprecated Use `maxAge`. Caller-supplied max age in ms for `asOf`.
+   */
+  staleAfterMs?: number;
+  /** Reject `asOf` more than this many ms in the future (default {@link DEFAULT_CLOCK_SKEW_MS}). */
+  clockSkewMs?: number;
 }
 
 export interface SafeToActResult {
@@ -24,6 +37,24 @@ const CONFIDENCE_RE = /\b(highly confident|high confidence|fully fixed|productio
 
 function push(stop: string[], reason: string): void {
   if (!stop.includes(reason)) stop.push(reason);
+}
+
+function trustedKeys(options: SafeToActOptions): string[] {
+  if (options.publicKey) return [options.publicKey];
+  return options.trustedPublicKeys ?? [];
+}
+
+function hasTrustedKeys(options: SafeToActOptions): boolean {
+  return trustedKeys(options).length > 0;
+}
+
+function verifyTrustedSignature(signed: SignedRemnant, options: SafeToActOptions): boolean {
+  const keys = trustedKeys(options);
+  const embedded = signed.signature.publicKey;
+  if (!keys.includes(embedded)) {
+    return false;
+  }
+  return verifyRemnantSignature(signed, embedded);
 }
 
 function hasCompletedEffect(remnant: Remnant): boolean {
@@ -137,6 +168,18 @@ function exceedsMaxAge(remnant: Remnant, now: Date, maxAge: number): boolean {
   return now.getTime() - asOf > maxAge;
 }
 
+function asOfTooFarInFuture(remnant: Remnant, now: Date, clockSkewMs: number): boolean {
+  const asOf = Date.parse(remnant.asOf);
+  if (!Number.isFinite(asOf)) return false;
+  return asOf > now.getTime() + clockSkewMs;
+}
+
+function storeMatchesSignedRemnant(remnant: Remnant, store: CurrentStore): boolean {
+  const current = store.resolveCurrent(remnant.id);
+  if (!current) return false;
+  return remnantsEqual(current, remnant);
+}
+
 function supersessionValid(remnant: Remnant, store?: CurrentStore): boolean {
   const ids = remnant.supersedes ?? [];
   if (ids.length === 0) return true;
@@ -211,14 +254,22 @@ function adversarialStops(remnant: Remnant): string[] {
 }
 
 /**
- * Machine STOP gate. Returns false unless status is current, signature verifies,
- * as_of is present, supersession is valid, required evidence is present, and adversarial traps are absent.
+ * Machine STOP gate. Returns false unless status is current, signature verifies against a
+ * caller-trusted key, as_of is present, supersession is valid, required evidence is present,
+ * and adversarial traps are absent.
  * Optional maxAge is caller-supplied; there is no default stale window.
  */
 export function isSafeToAct(signed: SignedRemnant, options: SafeToActOptions = {}): SafeToActResult {
   const stop: string[] = [];
   const remnant = signed.remnant;
   const now = options.now ?? new Date();
+  const maxAge = options.maxAge ?? options.staleAfterMs;
+  const clockSkewMs = options.clockSkewMs ?? DEFAULT_CLOCK_SKEW_MS;
+
+  if (!hasTrustedKeys(options)) {
+    push(stop, 'trusted public key is required');
+    return { safe: false, stop };
+  }
 
   if (!asOfPresent(remnant)) {
     push(stop, 'as_of is missing');
@@ -230,12 +281,20 @@ export function isSafeToAct(signed: SignedRemnant, options: SafeToActOptions = {
     return { safe: false, stop };
   }
 
+  if (asOfTooFarInFuture(remnant, now, clockSkewMs)) {
+    push(stop, 'asOf is in the future');
+  }
+
   if (remnant.status !== 'current') {
     push(stop, 'status must be current');
   }
 
-  if (!verifyRemnantSignature(signed, options.publicKey)) {
+  if (!verifyTrustedSignature(signed, options)) {
     push(stop, 'signature verification failed');
+  }
+
+  if (options.store && !storeMatchesSignedRemnant(remnant, options.store)) {
+    push(stop, 'store does not resolve this remnant as current');
   }
 
   if (!supersessionValid(remnant, options.store)) {
@@ -250,7 +309,7 @@ export function isSafeToAct(signed: SignedRemnant, options: SafeToActOptions = {
     for (const issue of proofDiagnostics(remnant)) push(stop, issue);
   }
 
-  if (options.maxAge !== undefined && exceedsMaxAge(remnant, now, options.maxAge)) {
+  if (maxAge !== undefined && exceedsMaxAge(remnant, now, maxAge)) {
     push(stop, 'asOf exceeds maxAge');
   }
 

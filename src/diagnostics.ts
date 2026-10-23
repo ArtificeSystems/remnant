@@ -32,6 +32,8 @@ export interface ValidationResult {
   ok: boolean;
   errors: RemnantDiagnostic[];
   warnings: RemnantDiagnostic[];
+  /** Present when `ok` is true — the strict-parsed Remnant (no unknown fields). */
+  value?: import('./remnant.js').Remnant;
 }
 
 export function diagnostic(

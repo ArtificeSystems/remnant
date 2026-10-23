@@ -22,6 +22,7 @@ export async function auditRemnant(
     const inspection = await inspectFileOutput(file, {
       hash: options.verifyHashes ?? true,
       sniffMediaType: true,
+      fileRoot: options.fileRoot,
     });
     const key = file.name ?? file.path;
     inspections[key] = inspection;

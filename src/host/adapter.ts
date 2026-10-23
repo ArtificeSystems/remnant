@@ -9,9 +9,13 @@ import { createCurrentStore, type CurrentStore } from '../store.js';
  */
 export interface HostAdapterSafeToActOptions {
   publicKey?: string;
+  trustedPublicKeys?: string[];
   now?: Date;
   /** Caller-supplied max age in ms for `asOf`. Omit to skip the age check. */
   maxAge?: number;
+  /** @deprecated Use `maxAge`. */
+  staleAfterMs?: number;
+  clockSkewMs?: number;
 }
 
 /**
@@ -49,8 +53,11 @@ export function createHostAdapter(options: CreateHostAdapterOptions = {}): HostA
       return isSafeToAct(signed, {
         store,
         publicKey: callOptions.publicKey,
+        trustedPublicKeys: callOptions.trustedPublicKeys,
         now: callOptions.now,
         maxAge: callOptions.maxAge,
+        staleAfterMs: callOptions.staleAfterMs,
+        clockSkewMs: callOptions.clockSkewMs,
       });
     },
   };

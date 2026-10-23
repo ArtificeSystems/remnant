@@ -72,7 +72,7 @@ Lifecycle status is one of: `draft`, `partial`, `current`, `superseded`, `reject
 
 First-class fields (eng-status card and Remnant envelope): `authority`, `not_checked`/`notChecked`, `lane`, `stop`, `as_of`/`asOf`.
 
-`isSafeToAct()` returns false when `as_of`/`asOf` is missing. Pass optional **`maxAge`** (ms) for a caller-supplied freshness window; there is no protocol default stale window.
+`isSafeToAct()` returns false when `as_of`/`asOf` is missing. Pass optional **`maxAge`** (ms) for a caller-supplied freshness window; **`staleAfterMs`** is a deprecated alias for the same option. There is no protocol default stale window. Callers must pass **`publicKey`** or **`trustedPublicKeys`** (fail-closed when absent). Future `asOf` beyond **`clockSkewMs`** (default 60s) is not safe.
 
 ## Resolution
 

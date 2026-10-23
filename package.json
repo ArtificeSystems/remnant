@@ -1,6 +1,6 @@
 {
   "name": "@artificesystems/remnant",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "Remnant Protocol: durable, accountable agent work state.",
   "type": "module",
   "license": "PolyForm-Noncommercial-1.0.0",
@@ -19,27 +19,39 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./node": {
       "types": "./dist/node/index.d.ts",
-      "import": "./dist/node/index.js"
+      "import": "./dist/node/index.js",
+      "require": "./dist/node/index.js",
+      "default": "./dist/node/index.js"
     },
     "./a2a": {
       "types": "./dist/a2a/index.d.ts",
-      "import": "./dist/a2a/index.js"
+      "import": "./dist/a2a/index.js",
+      "require": "./dist/a2a/index.js",
+      "default": "./dist/a2a/index.js"
     },
     "./mcp": {
       "types": "./dist/mcp/index.d.ts",
-      "import": "./dist/mcp/index.js"
+      "import": "./dist/mcp/index.js",
+      "require": "./dist/mcp/index.js",
+      "default": "./dist/mcp/index.js"
     },
     "./crypto": {
       "types": "./dist/crypto/index.d.ts",
-      "import": "./dist/crypto/index.js"
+      "import": "./dist/crypto/index.js",
+      "require": "./dist/crypto/index.js",
+      "default": "./dist/crypto/index.js"
     },
     "./conformance": {
       "types": "./dist/conformance/index.d.ts",
-      "import": "./dist/conformance/index.js"
+      "import": "./dist/conformance/index.js",
+      "require": "./dist/conformance/index.js",
+      "default": "./dist/conformance/index.js"
     }
   },
   "bin": {
@@ -55,7 +67,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "tsx --test test/core.test.ts test/node.test.ts test/conformance.test.ts test/resolve.test.ts test/interop.test.ts test/gap-close.test.ts test/host-adapter.test.ts",
+    "test": "tsx --test test/core.test.ts test/node.test.ts test/conformance.test.ts test/resolve.test.ts test/interop.test.ts test/gap-close.test.ts test/host-adapter.test.ts test/security-audit.test.ts",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run build && npm test"
   },

@@ -29,7 +29,14 @@ export {
 } from './create.js';
 export { parseRemnant } from './parse.js';
 export { serializeRemnant, canonicalizeRemnant, canonicalBytes } from './serialize.js';
-export { validateRemnant, isAbsolutePath, isIsoTimestamp } from './schema.js';
+export {
+  validateRemnant,
+  isAbsolutePath,
+  isIsoTimestamp,
+  DEFAULT_EXTENSION_MAX_DEPTH,
+  DEFAULT_EXTENSION_MAX_KEYS,
+  DEFAULT_EXTENSION_MAX_JSON_BYTES,
+} from './schema.js';
 export {
   addEvidence,
   addOutput,
@@ -48,7 +55,14 @@ export {
   type CurrentStore,
   type FileCurrentStoreOptions,
 } from './store.js';
-export { isSafeToAct, type SafeToActOptions, type SafeToActResult } from './safe.js';
+export {
+  isSafeToAct,
+  DEFAULT_CLOCK_SKEW_MS,
+  type SafeToActOptions,
+  type SafeToActResult,
+} from './safe.js';
+export { remnantsEqual } from './remnant-equality.js';
+export { PathJailError, resolvePathWithinRoot } from './path-jail.js';
 export {
   effectUsedAsProof,
   isProofEligible,
