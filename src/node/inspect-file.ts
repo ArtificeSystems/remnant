@@ -1,5 +1,6 @@
 import { lstat, stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { PathJailError, resolvePathWithinRoot } from '../path-jail.js';
 import type { FileOutput } from '../remnant.js';
 import { hashFileSha256 } from './hash-file.js';
 import { mediaTypesCompatible, sniffMediaType } from './sniff-media.js';
@@ -25,9 +26,9 @@ export async function verifyFileHash(path: string, declaredSha256: string): Prom
 
 export async function inspectFileOutput(
   output: FileOutput,
-  options: { hash?: boolean; sniffMediaType?: boolean } = {},
+  options: { hash?: boolean; sniffMediaType?: boolean; fileRoot?: string } = {},
 ): Promise<FileInspection> {
-  const absolutePath = resolve(output.path);
+  let absolutePath = resolve(output.path);
   const inspection: FileInspection = {
     exists: false,
     isFile: false,
@@ -36,6 +37,10 @@ export async function inspectFileOutput(
   };
 
   try {
+    if (options.fileRoot) {
+      absolutePath = await resolvePathWithinRoot(absolutePath, options.fileRoot);
+      inspection.absolutePath = absolutePath;
+    }
     const link = await lstat(absolutePath);
     inspection.exists = true;
     inspection.isSymlink = link.isSymbolicLink();
@@ -57,6 +62,9 @@ export async function inspectFileOutput(
       inspection.mediaTypeMatches = mediaTypesCompatible(output.mediaType, inspection.detectedMediaType);
     }
   } catch (err) {
+    if (err instanceof PathJailError) {
+      throw err;
+    }
     const code = (err as NodeJS.ErrnoException).code;
     inspection.error = code ?? (err instanceof Error ? err.message : String(err));
     if (code === 'ENOENT') {

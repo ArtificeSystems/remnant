@@ -6,6 +6,8 @@ export interface AuditOptions {
   inspectFiles?: boolean;
   verifyHashes?: boolean;
   now?: Date;
+  /** When set, file paths must resolve inside this directory (realpath jail). */
+  fileRoot?: string;
 }
 
 export interface RemnantAudit {

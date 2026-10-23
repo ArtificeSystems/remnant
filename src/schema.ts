@@ -9,6 +9,81 @@ import {
 
 const SHA256 = /^[0-9a-f]{64}$/i;
 
+/** Default maximum nesting depth inside `extensions` values (objects only). */
+export const DEFAULT_EXTENSION_MAX_DEPTH = 8;
+/** Default maximum number of keys across all nested objects in `extensions`. */
+export const DEFAULT_EXTENSION_MAX_KEYS = 64;
+/** Default maximum UTF-8 byte length of `JSON.stringify(extensions)`. */
+export const DEFAULT_EXTENSION_MAX_JSON_BYTES = 16_384;
+
+export interface ExtensionLimits {
+  maxDepth?: number;
+  maxKeys?: number;
+  maxJsonBytes?: number;
+}
+
+function extensionMetrics(
+  value: unknown,
+  depth = 0,
+  limits: ExtensionLimits,
+  state: { keys: number; jsonBytes?: number },
+): string | undefined {
+  const maxDepth = limits.maxDepth ?? DEFAULT_EXTENSION_MAX_DEPTH;
+  const maxKeys = limits.maxKeys ?? DEFAULT_EXTENSION_MAX_KEYS;
+  if (depth > maxDepth) {
+    return `extensions exceed max depth (${maxDepth})`;
+  }
+  if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+    for (const key of Object.keys(value as Record<string, unknown>)) {
+      state.keys += 1;
+      if (state.keys > maxKeys) {
+        return `extensions exceed max key count (${maxKeys})`;
+      }
+      const nested = extensionMetrics(
+        (value as Record<string, unknown>)[key],
+        depth + 1,
+        limits,
+        state,
+      );
+      if (nested) return nested;
+    }
+    return undefined;
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const nested = extensionMetrics(item, depth + 1, limits, state);
+      if (nested) return nested;
+    }
+  }
+  return undefined;
+}
+
+export function extensionLimitDiagnostics(
+  extensions: Record<string, unknown>,
+  limits: ExtensionLimits = {},
+): RemnantDiagnostic[] {
+  const out: RemnantDiagnostic[] = [];
+  const maxJsonBytes = limits.maxJsonBytes ?? DEFAULT_EXTENSION_MAX_JSON_BYTES;
+  const json = JSON.stringify(extensions);
+  const bytes = new TextEncoder().encode(json).length;
+  if (bytes > maxJsonBytes) {
+    out.push(
+      diagnostic(
+        'REMNANT_EXTENSIONS_TOO_LARGE',
+        'error',
+        `extensions JSON exceeds ${maxJsonBytes} bytes (got ${bytes})`,
+        'extensions',
+      ),
+    );
+  }
+  const state = { keys: Object.keys(extensions).length };
+  const depthIssue = extensionMetrics(extensions, 0, limits, state);
+  if (depthIssue) {
+    out.push(diagnostic('REMNANT_EXTENSIONS_DEPTH', 'error', depthIssue, 'extensions'));
+  }
+  return out;
+}
+
 export function isAbsolutePath(path: string): boolean {
   return path.startsWith('/') || /^[A-Za-z]:[\\/]/.test(path) || path.startsWith('\\\\');
 }
@@ -24,36 +99,44 @@ const outputBase = {
   description: z.string().optional(),
 };
 
-const textOutput = z.object({
-  ...outputBase,
-  kind: z.literal('text'),
-  mediaType: z.string().optional(),
-  text: z.string(),
-});
+const textOutput = z
+  .object({
+    ...outputBase,
+    kind: z.literal('text'),
+    mediaType: z.string().optional(),
+    text: z.string(),
+  })
+  .strict();
 
-const dataOutput = z.object({
-  ...outputBase,
-  kind: z.literal('data'),
-  mediaType: z.string().optional(),
-  data: z.unknown(),
-});
+const dataOutput = z
+  .object({
+    ...outputBase,
+    kind: z.literal('data'),
+    mediaType: z.string().optional(),
+    data: z.unknown(),
+  })
+  .strict();
 
-const fileOutput = z.object({
-  ...outputBase,
-  kind: z.literal('file'),
-  path: z.string().min(1),
-  mediaType: z.string().min(1),
-  sha256: z.string().optional(),
-  size: z.number().nonnegative().optional(),
-});
+const fileOutput = z
+  .object({
+    ...outputBase,
+    kind: z.literal('file'),
+    path: z.string().min(1),
+    mediaType: z.string().min(1),
+    sha256: z.string().optional(),
+    size: z.number().nonnegative().optional(),
+  })
+  .strict();
 
-const referenceOutput = z.object({
-  ...outputBase,
-  kind: z.literal('reference'),
-  uri: z.string().min(1),
-  mediaType: z.string().optional(),
-  sha256: z.string().optional(),
-});
+const referenceOutput = z
+  .object({
+    ...outputBase,
+    kind: z.literal('reference'),
+    uri: z.string().min(1),
+    mediaType: z.string().optional(),
+    sha256: z.string().optional(),
+  })
+  .strict();
 
 const remnantOutput = z.discriminatedUnion('kind', [
   textOutput,
@@ -62,59 +145,69 @@ const remnantOutput = z.discriminatedUnion('kind', [
   referenceOutput,
 ]);
 
-const assumption = z.object({
-  statement: z.string().min(1),
-  basis: z.enum(['user', 'tool', 'remnant', 'external', 'agent', 'unknown']),
-  ref: z.string().optional(),
-});
+const assumption = z
+  .object({
+    statement: z.string().min(1),
+    basis: z.enum(['user', 'tool', 'remnant', 'external', 'agent', 'unknown']),
+    ref: z.string().optional(),
+  })
+  .strict();
 
-const verification = z.object({
-  claim: z.string(),
-  method: z.string(),
-  result: z.enum(['pass', 'fail', 'unknown']),
-  evidence: z.array(z.string()).optional(),
-  asOf: z.string().optional(),
-  doesNotProve: z.array(z.string()).optional(),
-});
+const verification = z
+  .object({
+    claim: z.string(),
+    method: z.string(),
+    result: z.enum(['pass', 'fail', 'unknown']),
+    evidence: z.array(z.string()).optional(),
+    asOf: z.string().optional(),
+    doesNotProve: z.array(z.string()).optional(),
+  })
+  .strict();
 
-const sideEffect = z.object({
-  action: z.string().min(1),
-  status: z.enum(['planned', 'attempted', 'completed', 'failed']),
-  evidence: z.array(z.string()).optional(),
-  asOf: z.string().optional(),
-});
+const sideEffect = z
+  .object({
+    action: z.string().min(1),
+    status: z.enum(['planned', 'attempted', 'completed', 'failed']),
+    evidence: z.array(z.string()).optional(),
+    asOf: z.string().optional(),
+  })
+  .strict();
 
-export const evidenceShape = z.object({
-  type: z.string().min(1),
-  claim: z.string().optional(),
-  uri: z.string().optional(),
-  digest: z.string().optional(),
-  data: z.unknown().optional(),
-});
+export const evidenceShape = z
+  .object({
+    type: z.string().min(1),
+    claim: z.string().optional(),
+    uri: z.string().optional(),
+    digest: z.string().optional(),
+    data: z.unknown().optional(),
+  })
+  .strict();
 
-export const remnantShape = z.object({
-  protocolVersion: z.literal('0.1'),
-  id: z.string().min(1),
-  createdAt: z.string(),
-  asOf: z.string(),
-  producer: z.string().min(1),
-  goal: z.string(),
-  status: z.enum(['draft', 'partial', 'current', 'superseded', 'rejected']),
-  outputs: z.array(remnantOutput),
-  assumptions: z.array(assumption),
-  unknowns: z.array(z.string()),
-  verification: z.array(verification),
-  stop: z.array(z.string()),
-  supersedes: z.array(z.string()).optional(),
-  effects: z.array(sideEffect).optional(),
-  evidence: z.array(evidenceShape).optional(),
-  nextAction: z.string().nullable().optional(),
-  locked: z.boolean().optional(),
-  authority: z.string().optional(),
-  notChecked: z.array(z.string()).optional(),
-  lane: z.string().optional(),
-  extensions: z.record(z.string(), z.unknown()).optional(),
-});
+export const remnantShape = z
+  .object({
+    protocolVersion: z.literal('0.1'),
+    id: z.string().min(1),
+    createdAt: z.string(),
+    asOf: z.string(),
+    producer: z.string().min(1),
+    goal: z.string(),
+    status: z.enum(['draft', 'partial', 'current', 'superseded', 'rejected']),
+    outputs: z.array(remnantOutput),
+    assumptions: z.array(assumption),
+    unknowns: z.array(z.string()),
+    verification: z.array(verification),
+    stop: z.array(z.string()),
+    supersedes: z.array(z.string()).optional(),
+    effects: z.array(sideEffect).optional(),
+    evidence: z.array(evidenceShape).optional(),
+    nextAction: z.string().nullable().optional(),
+    locked: z.boolean().optional(),
+    authority: z.string().optional(),
+    notChecked: z.array(z.string()).optional(),
+    lane: z.string().optional(),
+    extensions: z.record(z.string(), z.unknown()).optional(),
+  })
+  .strict();
 
 export function semanticDiagnostics(value: Remnant): RemnantDiagnostic[] {
   const out: RemnantDiagnostic[] = [];
@@ -211,6 +304,10 @@ export function semanticDiagnostics(value: Remnant): RemnantDiagnostic[] {
     );
   }
 
+  if (value.extensions) {
+    out.push(...extensionLimitDiagnostics(value.extensions));
+  }
+
   if (value.supersedes) {
     const seen = new Set<string>();
     for (const id of value.supersedes) {
@@ -299,5 +396,5 @@ export function validateRemnant(value: unknown): ValidationResult {
   const diagnostics = semanticDiagnostics(parsed.data as Remnant);
   const errors = diagnostics.filter((d) => d.severity === 'error');
   const warnings = diagnostics.filter((d) => d.severity === 'warning');
-  return { ok: errors.length === 0, errors, warnings };
+  return { ok: errors.length === 0, errors, warnings, value: parsed.data as Remnant };
 }

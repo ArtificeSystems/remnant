@@ -8,5 +8,5 @@ export function parseRemnant(json: string | unknown): Remnant {
   if (!result.ok) {
     throw new RemnantValidationError(result.errors);
   }
-  return remnantShape.parse(value) as Remnant;
+  return result.value ?? (remnantShape.parse(value) as Remnant);
 }

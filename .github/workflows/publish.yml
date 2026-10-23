@@ -1,11 +1,9 @@
 name: Publish npm package
 
 on:
-  workflow_dispatch:
-  # Optional later - uncomment when ready to publish on version tags:
-  # push:
-  #   tags:
-  #     - 'v*'
+  push:
+    tags:
+      - 'v*'
 
 jobs:
   publish:
@@ -29,11 +27,10 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Test
+        run: npm test
+
       - name: Publish @artificesystems/remnant
         run: npm publish --access public
         env:
-<<<<<<< HEAD
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-=======
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
->>>>>>> @{u}
