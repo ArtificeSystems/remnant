@@ -63,6 +63,13 @@ export function extensionLimitDiagnostics(
   limits: ExtensionLimits = {},
 ): RemnantDiagnostic[] {
   const out: RemnantDiagnostic[] = [];
+  // Bounded depth walk first so pathological nesting never reaches JSON.stringify.
+  const state = { keys: Object.keys(extensions).length };
+  const depthIssue = extensionMetrics(extensions, 0, limits, state);
+  if (depthIssue) {
+    out.push(diagnostic('REMNANT_EXTENSIONS_DEPTH', 'error', depthIssue, 'extensions'));
+    return out;
+  }
   const maxJsonBytes = limits.maxJsonBytes ?? DEFAULT_EXTENSION_MAX_JSON_BYTES;
   const json = JSON.stringify(extensions);
   const bytes = new TextEncoder().encode(json).length;
@@ -75,11 +82,6 @@ export function extensionLimitDiagnostics(
         'extensions',
       ),
     );
-  }
-  const state = { keys: Object.keys(extensions).length };
-  const depthIssue = extensionMetrics(extensions, 0, limits, state);
-  if (depthIssue) {
-    out.push(diagnostic('REMNANT_EXTENSIONS_DEPTH', 'error', depthIssue, 'extensions'));
   }
   return out;
 }

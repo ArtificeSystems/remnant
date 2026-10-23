@@ -1,7 +1,7 @@
 # Remnant v2.0.0 release notes
 
 **Package:** `@artificesystems/remnant`  
-**Status:** Prepared for release (not published from this PR)  
+**Status:** Published to npm via the `v2.0.0` tag (CI publish workflow)  
 **License:** PolyForm Noncommercial 1.0.0
 
 ## Summary
@@ -48,5 +48,4 @@ v2.0.0 is a **security-focused major release**. It hardens `isSafeToAct()`, the 
 
 ## Explicitly not in this release
 
-- No npm publish or git tag from this PR
 - No agent runner, PKI, or universal stale window beyond caller-supplied `maxAge`

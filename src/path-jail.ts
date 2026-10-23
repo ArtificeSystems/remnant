@@ -1,5 +1,5 @@
 import { realpath } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { isAbsolute, relative, resolve, sep } from 'node:path';
 
 export class PathJailError extends Error {
   constructor(message: string) {
@@ -28,8 +28,8 @@ export async function resolvePathWithinRoot(
     }
     throw err;
   }
-  const prefix = rootReal.endsWith('/') ? rootReal : `${rootReal}/`;
-  if (resolved !== rootReal && !resolved.startsWith(prefix)) {
+  const rel = relative(rootReal, resolved);
+  if (rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel)) {
     throw new PathJailError(`path is outside file root: ${targetPath}`);
   }
   return resolved;

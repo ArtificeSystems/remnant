@@ -1,5 +1,5 @@
 import { closeSync, fsyncSync, mkdirSync, openSync, readFileSync, renameSync, writeSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import type { Remnant } from './remnant.js';
 import { remnantsEqual } from './remnant-equality.js';
 import { validateRemnant } from './schema.js';
@@ -153,7 +153,7 @@ export interface FileCurrentStoreOptions {
 function writeFileAtomic(path: string, contents: string): void {
   const dir = dirname(path);
   mkdirSync(dir, { recursive: true });
-  const tempPath = join(dir, `.${path.split('/').pop() ?? 'store'}.tmp-${process.pid}`);
+  const tempPath = join(dir, `.${basename(path) || 'store'}.tmp-${process.pid}`);
   const fd = openSync(tempPath, 'w');
   try {
     writeSync(fd, Buffer.from(contents, 'utf8'));
